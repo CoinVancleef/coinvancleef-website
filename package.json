@@ -1,0 +1,27 @@
+{
+  "name": "coinvancleef-website",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=16.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:admin": "turbo run dev --filter=admin",
+    "dev:graphql-api": "turbo run dev --filter=graphql-api",
+    "dev:setup": "turbo run setup",
+    "dev:migrate": "turbo run db:migrate",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.3",
+    "prettier": "^2.8.8",
+    "turbo": "^1.9.3",
+    "typescript": "^5.0.4"
+  },
+  "packageManager": "pnpm@8.6.0"
+}

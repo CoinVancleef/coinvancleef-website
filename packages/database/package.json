@@ -1,0 +1,27 @@
+{
+  "name": "database",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf .turbo node_modules dist",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "setup": "prisma generate"
+  },
+  "devDependencies": {
+    "eslint": "^8.40.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.16.2",
+    "@types/node": "^18.16.3",
+    "dotenv": "^16.5.0",
+    "prisma": "^4.16.2"
+  }
+}
