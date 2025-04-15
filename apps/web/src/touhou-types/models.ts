@@ -59,37 +59,21 @@ export interface BaseScoreEntry {
 export interface TH06ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH06;
   shotType: TH06ShotType;
-  bombs?: number;
-  lives?: number;
-  power?: number;
 }
 
 export interface TH07ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH07;
   shotType: TH07ShotType;
-  cherry?: number;
-  bombPieces?: number;
-  lives?: number;
-  power?: number;
 }
 
 export interface TH08ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH08;
-  shotTypeA: TH08ShotTypeA;
-  shotTypeB: TH08ShotTypeB;
-  route: Th8Route;
-  human?: number;
-  youkai?: number;
-  spell?: number;
+  shotType: TH08ShotTypeA | TH08ShotTypeB;
 }
 
 export interface TH09ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH09;
   shotType: TH09ShotType;
-  ai?: boolean;
-  perfectPossessed?: number;
-  cleared?: boolean;
-  team?: string;
 }
 
 export interface TH10ScoreEntry extends BaseScoreEntry {
@@ -100,13 +84,11 @@ export interface TH10ScoreEntry extends BaseScoreEntry {
 export interface TH11ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH11;
   shotType: TH11ShotType;
-  ufos?: number;
 }
 
 export interface TH12ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH12;
   shotType: TH12ShotType;
-  ufos?: number;
 }
 
 export interface TH128ScoreEntry extends BaseScoreEntry {
@@ -117,7 +99,6 @@ export interface TH128ScoreEntry extends BaseScoreEntry {
 export interface TH13ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH13;
   shotType: TH13ShotType;
-  trance?: number;
 }
 
 export interface TH14ScoreEntry extends BaseScoreEntry {
@@ -128,25 +109,21 @@ export interface TH14ScoreEntry extends BaseScoreEntry {
 export interface TH15ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH15;
   shotType: TH15ShotType;
-  pointItems?: number;
 }
 
 export interface TH16ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH16;
   shotType: TH16ShotType;
-  seasons?: number;
 }
 
 export interface TH17ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH17;
   shotType: TH17ShotType;
-  fragments?: number;
 }
 
 export interface TH18ScoreEntry extends BaseScoreEntry {
   game: TouhouGame.TH18;
   shotType: TH18ShotType;
-  cards?: number;
 }
 
 /**

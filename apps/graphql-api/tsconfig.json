@@ -10,16 +10,18 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": ".",
+    "baseUrl": "./",
     "strict": false,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "noImplicitReturns": true,
     "paths": {
-      "*": ["node_modules/*", "../../node_modules/*"]
+      "*": ["node_modules/*", "../../node_modules/*"],
+      "@touhou-types/*": ["../web/src/touhou-types/*"]
     },
     "typeRoots": ["../../node_modules/@types", "node_modules/@types"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-} 
+  "exclude": ["node_modules", "dist"],
+  "references": [{ "path": "../web" }]
+}
