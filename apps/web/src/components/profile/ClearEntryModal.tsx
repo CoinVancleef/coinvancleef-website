@@ -65,24 +65,15 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
       } else if (data.createClearEntry.clearEntry) {
         console.log('Entry created successfully:', data.createClearEntry.clearEntry);
 
-        // Use a single method to refresh data
         try {
-          // Just refetch the query directly
+          // Refresh data by refetching relevant queries
           await apolloClient.refetchQueries({
-            include: ['GetUserClearEntries'],
+            include: ['GetUserClearEntries', 'GetUserProfile'],
           });
 
-          // 3. Reset store (last resort)
-          setTimeout(() => {
-            apolloClient
-              .resetStore()
-              .then(() => console.log('Apollo store reset successful'))
-              .catch(err => console.error('Error resetting Apollo store:', err));
-          }, 500);
+          console.log('Data refreshed successfully');
 
-          console.log('Initiated data refresh using multiple methods');
-
-          // Only close modal if successful
+          // Close modal
           onClose();
         } catch (err) {
           console.error('Error refreshing data:', err);

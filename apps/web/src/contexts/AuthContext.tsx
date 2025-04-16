@@ -38,51 +38,79 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const router = useRouter();
   const client = useApolloClient();
 
   // Initialize auth state from localStorage on component mount (client-side only)
   useEffect(() => {
-    setLoading(true);
-    try {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+    const loadAuthState = async () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('token');
+          const storedUser = localStorage.getItem('user');
 
-        if (token && storedUser) {
-          setUser(JSON.parse(storedUser));
+          if (token && storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+
+              // Ensure token is valid by setting headers for future requests
+              // No need to reset Apollo - the auth link will handle the token
+              console.log('Auth restored for user:', parsedUser.email);
+            } catch (parseError) {
+              console.error('Error parsing stored user:', parseError);
+              // Invalid data - clear it
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+            }
+          }
         }
+      } catch (error) {
+        console.error('Error restoring auth state:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error restoring auth state:', error);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    loadAuthState();
   }, []);
 
   // Login function
   const login = (token: string, userData: User) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+      setUser(userData);
+      console.log('User logged in:', userData.email);
+    } catch (error) {
+      console.error('Error during login:', error);
     }
-    setUser(userData);
   };
 
   // Logout function
   const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+      setUser(null);
+
+      // Clear Apollo cache to remove any authenticated data
+      client.resetStore().catch(err => {
+        console.error('Error resetting Apollo store during logout:', err);
+      });
+
+      // Redirect to login page
+      router.push('/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Force redirect to login in case of errors
+      window.location.href = '/login';
     }
-    setUser(null);
-
-    // Clear Apollo cache to remove any authenticated data
-    client.resetStore();
-
-    // Redirect to login page
-    router.push('/login');
   };
 
   const value = {

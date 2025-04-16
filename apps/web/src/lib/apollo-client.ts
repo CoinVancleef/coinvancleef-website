@@ -26,17 +26,46 @@ const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/graphql',
 });
 
+// Keep track of whether we've already triggered a logout
+let isLoggingOut = false;
+
 // Error handling link
-const errorLink = onError(({ graphQLErrors, networkError }) => {
+const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
-      console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}, Operation: ${operation.operationName}`,
+      );
 
       // Handle auth errors (e.g., token expired)
-      if (message.includes('not authenticated') && typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+      const isAuthError =
+        message.includes('not authenticated') ||
+        message.includes('unauthorized') ||
+        message.includes('token expired');
+
+      if (isAuthError && typeof window !== 'undefined' && !isLoggingOut) {
+        // Don't log out if it's just a profile page or common query after page refresh
+        const isRefreshQuery =
+          operation.operationName === 'GetUserProfile' ||
+          operation.operationName === 'GetUserClearEntries';
+
+        // Check if we have valid auth in localStorage before logging out
+        const hasToken = !!localStorage.getItem('token');
+        const hasUser = !!localStorage.getItem('user');
+
+        // Only log out if there's a genuine auth error (not just a refresh race condition)
+        if (!isRefreshQuery || !hasToken || !hasUser) {
+          isLoggingOut = true;
+          console.warn('Authentication error detected, logging out');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        } else {
+          console.log(
+            'Ignoring auth error during page refresh for query:',
+            operation.operationName,
+          );
+        }
       }
     });
   }

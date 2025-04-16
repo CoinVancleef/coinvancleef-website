@@ -46,8 +46,8 @@ export default function ProfilePage() {
   // Show loading state while checking auth or fetching data
   if (authLoading || loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-900">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
       </div>
     );
   }
