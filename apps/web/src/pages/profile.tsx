@@ -67,8 +67,8 @@ export default function ProfilePage() {
             <p>Error loading profile: {error.message}</p>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col items-center p-8 bg-gray-800 rounded-lg shadow-md mb-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col items-center p-8 bg-gray-800 rounded-lg shadow-md mb-8 w-full">
               <ProfileHeader name={userData.name} danmakuPoints={userData.danmaku_points} />
 
               <div className="bg-gray-800 rounded-lg shadow-md p-6 mb-8 w-full">
@@ -95,12 +95,12 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <RecentClears clears={userData.scores} />
-
               <div className="text-center">
                 <LogoutButton />
               </div>
             </div>
+
+            <RecentClears />
             <ClearEntries />
 
             <div className="text-center">

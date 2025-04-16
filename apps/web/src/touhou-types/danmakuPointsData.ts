@@ -18,7 +18,7 @@ export const DANMAKU_POINTS_DATABASE: DanmakuPointsData[] = [
   { game: TouhouGame.TH07, shotType: 'MarisaA', lnn: 100, lnbPlus: 30, lnb: 26, l1cc: 19 },
   { game: TouhouGame.TH07, shotType: 'MarisaB', lnn: 140, lnbPlus: 31, lnb: 28, l1cc: 20 },
   { game: TouhouGame.TH07, shotType: 'SakuyaA', lnn: 150, lnbPlus: 31, lnb: 28, l1cc: 20 },
-  { game: TouhouGame.TH07, shotType: 'SakuyB', lnn: 80, lnbPlus: 29, lnb: 26, l1cc: 18 },
+  { game: TouhouGame.TH07, shotType: 'SakuyaB', lnn: 80, lnbPlus: 29, lnb: 26, l1cc: 18 },
 
   // TH08 - Imperishable Night (Final A)
   {

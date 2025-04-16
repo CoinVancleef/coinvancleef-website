@@ -76,6 +76,9 @@ export class ClearEntryResolver {
 
     const clearEntries = await prisma.clearEntry.findMany({
       where: { userId },
+      orderBy: {
+        danmaku_points: 'desc',
+      },
       include: {
         createdBy: true,
       },

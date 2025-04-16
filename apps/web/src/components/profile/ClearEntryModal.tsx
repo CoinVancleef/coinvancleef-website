@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { gql, useMutation, useApolloClient } from '@apollo/client';
-import { Difficulty } from '../../touhou-types/enums';
+import { Difficulty, TouhouGame } from '../../touhou-types/enums';
 import { useUserClears } from './UserClears';
 import GameSelector from './form/GameSelector';
 import ShotTypeSelector from './form/ShotTypeSelector';
@@ -205,6 +205,7 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
             setIsNo3rdCondition={setIsNo3rdCondition}
             setNumberOfDeaths={setNumberOfDeaths}
             setNumberOfBombs={setNumberOfBombs}
+            selectedGame={game as TouhouGame}
           />
 
           <CountInputs
@@ -216,6 +217,7 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
             isNoBombs={isNoBombs}
             deathsError={errors.numberOfDeaths}
             bombsError={errors.numberOfBombs}
+            selectedGame={game as TouhouGame}
           />
 
           <LinkInputs

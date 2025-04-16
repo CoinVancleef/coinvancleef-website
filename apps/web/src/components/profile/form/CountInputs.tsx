@@ -1,4 +1,5 @@
 import React from 'react';
+import { TouhouGame } from '../../../touhou-types/enums';
 
 interface CountInputsProps {
   numberOfDeaths: string;
@@ -9,6 +10,7 @@ interface CountInputsProps {
   isNoBombs: boolean;
   deathsError?: string;
   bombsError?: string;
+  selectedGame?: TouhouGame | null;
 }
 
 const CountInputs: React.FC<CountInputsProps> = ({
@@ -20,7 +22,35 @@ const CountInputs: React.FC<CountInputsProps> = ({
   isNoBombs,
   deathsError,
   bombsError,
+  selectedGame,
 }) => {
+  const getDeathCountNote = () => {
+    if (!selectedGame) return null;
+
+    switch (selectedGame) {
+      case TouhouGame.TH07:
+        return (
+          <p className="mt-1 text-sm text-indigo-400">
+            Note: Border Breaks must be counted as deaths.
+          </p>
+        );
+      case TouhouGame.TH08:
+        return (
+          <p className="mt-1 text-sm text-indigo-400">
+            Note: Failed Last Spells must be counted as deaths.
+          </p>
+        );
+      case TouhouGame.TH17:
+        return (
+          <p className="mt-1 text-sm text-indigo-400">
+            Note: Hyper Breaks must be counted as deaths.
+          </p>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -40,6 +70,7 @@ const CountInputs: React.FC<CountInputsProps> = ({
           disabled={isNoDeaths}
         />
         {deathsError && <p className="mt-1 text-sm text-red-500">{deathsError}</p>}
+        {getDeathCountNote()}
       </div>
 
       <div>

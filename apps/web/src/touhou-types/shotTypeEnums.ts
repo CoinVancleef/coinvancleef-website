@@ -19,7 +19,7 @@ export enum TH07ShotType {
   MARISA_A = 'MarisaA',
   MARISA_B = 'MarisaB',
   SAKUYA_A = 'SakuyaA',
-  SAKUYA_B = 'SakuyB', // Note: matches typo in spreadsheet
+  SAKUYA_B = 'SakuyaB',
 }
 
 /**

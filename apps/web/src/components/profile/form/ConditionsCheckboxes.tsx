@@ -1,4 +1,5 @@
 import React from 'react';
+import { TouhouGame, GAME_THIRD_CONDITION } from '../../../touhou-types/enums';
 
 interface ConditionsCheckboxesProps {
   isNoDeaths: boolean;
@@ -9,6 +10,7 @@ interface ConditionsCheckboxesProps {
   setIsNo3rdCondition: (value: boolean) => void;
   setNumberOfDeaths: (value: string) => void;
   setNumberOfBombs: (value: string) => void;
+  selectedGame: TouhouGame | null;
 }
 
 const ConditionsCheckboxes: React.FC<ConditionsCheckboxesProps> = ({
@@ -20,7 +22,12 @@ const ConditionsCheckboxes: React.FC<ConditionsCheckboxesProps> = ({
   setIsNo3rdCondition,
   setNumberOfDeaths,
   setNumberOfBombs,
+  selectedGame,
 }) => {
+  // Determine if the selected game has a third condition
+  const thirdCondition = selectedGame ? GAME_THIRD_CONDITION[selectedGame] : null;
+  const showThirdCondition = !!thirdCondition;
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">Conditions</label>
@@ -53,15 +60,19 @@ const ConditionsCheckboxes: React.FC<ConditionsCheckboxesProps> = ({
           <span className="ml-2 text-gray-300">No Bombs</span>
         </label>
 
-        <label className="inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            className="form-checkbox h-5 w-5 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
-            checked={isNo3rdCondition}
-            onChange={e => setIsNo3rdCondition(e.target.checked)}
-          />
-          <span className="ml-2 text-gray-300">No 3rd Condition</span>
-        </label>
+        {showThirdCondition && (
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
+              checked={isNo3rdCondition}
+              onChange={e => setIsNo3rdCondition(e.target.checked)}
+            />
+            <span className="ml-2 text-gray-300">
+              {thirdCondition?.description || 'No 3rd Condition'}
+            </span>
+          </label>
+        )}
       </div>
     </div>
   );

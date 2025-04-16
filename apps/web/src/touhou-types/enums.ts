@@ -167,3 +167,30 @@ export const GAME_PRIMARY_ACHIEVEMENT: Record<TouhouGame, AchievementType> = {
   [TouhouGame.TH17]: AchievementType.LNN,
   [TouhouGame.TH18]: AchievementType.LNN,
 };
+
+/**
+ * Maps each game to its corresponding third condition code and description
+ * TH07 - NBB (No Border Break)
+ * TH08 - FS (Full Spell)
+ * TH12 - NV (No UFO)
+ * TH13 - NT (No Trance)
+ * TH16 - NR (No Release)
+ * TH17 - NH (No Hyper)
+ * TH18 - NC (No Cards)
+ */
+export const GAME_THIRD_CONDITION = {
+  [TouhouGame.TH06]: null,
+  [TouhouGame.TH07]: { code: 'NBB', description: 'No Border Break' },
+  [TouhouGame.TH08]: { code: 'FS', description: 'Full Spell' },
+  [TouhouGame.TH09]: null,
+  [TouhouGame.TH10]: null,
+  [TouhouGame.TH11]: null,
+  [TouhouGame.TH12]: { code: 'NV', description: 'No UFO summons' },
+  [TouhouGame.TH128]: null,
+  [TouhouGame.TH13]: { code: 'NT', description: 'No Trance' },
+  [TouhouGame.TH14]: null,
+  [TouhouGame.TH15]: null,
+  [TouhouGame.TH16]: { code: 'NR', description: 'No Release' },
+  [TouhouGame.TH17]: { code: 'NH', description: 'No Hyper' },
+  [TouhouGame.TH18]: { code: 'NC', description: 'No Cards' },
+};
