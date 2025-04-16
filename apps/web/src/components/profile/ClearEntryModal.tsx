@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import { getTouhouGameOptions, getShotTypeOptions } from '../../utils/gameOptions';
-import { TouhouGame } from '../../touhou-types/enums';
+import {
+  TouhouGame,
+  GAME_DISPLAY_NAMES,
+  GAME_COVER_IMAGES,
+  GAME_SHORT_NAMES,
+  Difficulty,
+} from '../../touhou-types/enums';
+import { GAME_SHOT_TYPE_MAP, TH08ShotTypeA, TH08ShotTypeB } from '../../touhou-types/shotTypeEnums';
 
 const ADD_CLEAR_ENTRY = gql`
   mutation CreateClearEntry($data: ClearEntryInput!) {
@@ -33,15 +39,33 @@ interface ClearEntryModalProps {
 const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) => {
   const [game, setGame] = useState<string>('');
   const [shotType, setShotType] = useState<string>('');
+  const [difficulty] = useState<string>(Difficulty.LUNATIC); // Auto-set to Lunatic, no setter needed since it's disabled
   const [isNoDeaths, setIsNoDeaths] = useState<boolean>(false);
   const [isNoBombs, setIsNoBombs] = useState<boolean>(false);
   const [isNo3rdCondition, setIsNo3rdCondition] = useState<boolean>(false);
-  const [numberOfDeaths, setNumberOfDeaths] = useState<string>('0');
-  const [numberOfBombs, setNumberOfBombs] = useState<string>('0');
+  const [numberOfDeaths, setNumberOfDeaths] = useState<string>('');
+  const [numberOfBombs, setNumberOfBombs] = useState<string>('');
   const [videoLink, setVideoLink] = useState<string>('');
   const [replayLink, setReplayLink] = useState<string>('');
-  const [dateAchieved, setDateAchieved] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // For custom dropdown
+  const [isGameDropdownOpen, setIsGameDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsGameDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const [createClearEntry, { loading }] = useMutation(ADD_CLEAR_ENTRY, {
     onCompleted: data => {
@@ -77,12 +101,12 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
     if (!shotType) newErrors.shotType = 'Shot type is required';
 
     // Check logic for deaths and no-deaths
-    if (isNoDeaths && parseInt(numberOfDeaths, 10) > 0) {
+    if (isNoDeaths && numberOfDeaths && parseInt(numberOfDeaths, 10) > 0) {
       newErrors.numberOfDeaths = 'Cannot have deaths with No Deaths selected';
     }
 
     // Check logic for bombs and no-bombs
-    if (isNoBombs && parseInt(numberOfBombs, 10) > 0) {
+    if (isNoBombs && numberOfBombs && parseInt(numberOfBombs, 10) > 0) {
       newErrors.numberOfBombs = 'Cannot have bombs with No Bombs selected';
     }
 
@@ -112,11 +136,10 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
           isNoDeaths,
           isNoBombs,
           isNo3rdCondition,
-          numberOfDeaths: parseInt(numberOfDeaths, 10),
-          numberOfBombs: parseInt(numberOfBombs, 10),
+          numberOfDeaths: numberOfDeaths ? parseInt(numberOfDeaths, 10) : undefined,
+          numberOfBombs: numberOfBombs ? parseInt(numberOfBombs, 10) : undefined,
           videoLink: videoLink || undefined,
           replayLink: replayLink || undefined,
-          dateAchieved: dateAchieved ? new Date(dateAchieved).toISOString() : undefined,
         },
       },
     });
@@ -156,29 +179,69 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Game Selection */}
+            {/* Game Selection - Custom Dropdown */}
             <div>
               <label htmlFor="game" className="block text-sm font-medium text-gray-300 mb-1">
                 Game
               </label>
-              <select
-                id="game"
-                className={`w-full px-3 py-2 rounded bg-gray-700 border ${
-                  errors.game ? 'border-red-500' : 'border-gray-600'
-                } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-                value={game}
-                onChange={e => {
-                  setGame(e.target.value);
-                  setShotType(''); // Reset shot type when game changes
-                }}
-              >
-                <option value="">Select Game</option>
-                {getTouhouGameOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  className={`flex items-center justify-between w-full px-3 py-2 rounded bg-gray-700 border ${
+                    errors.game ? 'border-red-500' : 'border-gray-600'
+                  } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                  onClick={() => setIsGameDropdownOpen(!isGameDropdownOpen)}
+                >
+                  {game ? (
+                    <div className="flex items-center">
+                      <img
+                        src={GAME_COVER_IMAGES[game as TouhouGame]}
+                        alt={GAME_DISPLAY_NAMES[game as TouhouGame]}
+                        className="h-6 w-auto mr-2 rounded"
+                      />
+                      <span>{GAME_SHORT_NAMES[game as TouhouGame]}</span>
+                    </div>
+                  ) : (
+                    <span>Select Game</span>
+                  )}
+                  <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </button>
+
+                {isGameDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <ul className="py-1">
+                      {Object.entries(TouhouGame).map(([_, value]) => (
+                        <li
+                          key={value}
+                          className="cursor-pointer hover:bg-gray-600 px-3 py-2"
+                          onClick={() => {
+                            setGame(value);
+                            setShotType('');
+                            setIsGameDropdownOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <img
+                              src={GAME_COVER_IMAGES[value as TouhouGame]}
+                              alt={GAME_DISPLAY_NAMES[value as TouhouGame]}
+                              className="h-6 w-auto mr-2 rounded"
+                            />
+                            <span className="text-white">
+                              {GAME_DISPLAY_NAMES[value as TouhouGame]}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
               {errors.game && <p className="mt-1 text-sm text-red-500">{errors.game}</p>}
             </div>
 
@@ -197,51 +260,112 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
                 disabled={!game}
               >
                 <option value="">Select Shot Type</option>
-                {game &&
-                  getShotTypeOptions(game as TouhouGame).map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+
+                {/* TH08 needs special handling to show both Final A and Final B */}
+                {game === TouhouGame.TH08 ? (
+                  <>
+                    {/* Final A shot types */}
+                    <optgroup label="Final A">
+                      {Object.entries(TH08ShotTypeA).map(([key, value]) => (
+                        <option key={value as string} value={value as string}>
+                          {value as string}
+                        </option>
+                      ))}
+                    </optgroup>
+
+                    {/* Final B shot types */}
+                    <optgroup label="Final B">
+                      {Object.entries(TH08ShotTypeB).map(([key, value]) => (
+                        <option key={value as string} value={value as string}>
+                          {value as string}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </>
+                ) : (
+                  /* Other games use the standard map */
+                  game &&
+                  Object.entries(GAME_SHOT_TYPE_MAP[game as TouhouGame] || {})
+                    .filter(([_, value]) => typeof value === 'string')
+                    .map(([key, value]) => (
+                      <option key={value as string} value={value as string}>
+                        {value as string}
+                      </option>
+                    ))
+                )}
               </select>
               {errors.shotType && <p className="mt-1 text-sm text-red-500">{errors.shotType}</p>}
             </div>
+          </div>
+
+          {/* Difficulty Selection */}
+          <div>
+            <label htmlFor="difficulty" className="block text-sm font-medium text-gray-300 mb-1">
+              Difficulty
+            </label>
+            <select
+              id="difficulty"
+              className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 opacity-80 cursor-not-allowed"
+              value={difficulty}
+              disabled={true}
+            >
+              <option value={Difficulty.LUNATIC}>{Difficulty.LUNATIC}</option>
+              {Object.values(Difficulty)
+                .filter(diff => diff !== Difficulty.LUNATIC)
+                .map(diff => (
+                  <option key={diff} value={diff} disabled>
+                    {diff}
+                  </option>
+                ))}
+            </select>
+            <p className="mt-1 text-sm text-indigo-400 flex items-center">
+              <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>We only support Lunatic difficulty currently.</span>
+            </p>
           </div>
 
           {/* Conditions */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Conditions</label>
             <div className="flex flex-wrap gap-4">
-              <label className="inline-flex items-center">
+              <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  className="form-checkbox text-indigo-600 h-5 w-5 rounded border-gray-600 bg-gray-700 focus:ring-indigo-500"
+                  className="form-checkbox h-5 w-5 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
                   checked={isNoDeaths}
                   onChange={e => {
                     setIsNoDeaths(e.target.checked);
                     if (e.target.checked) setNumberOfDeaths('0');
+                    else setNumberOfDeaths('');
                   }}
                 />
                 <span className="ml-2 text-gray-300">No Deaths</span>
               </label>
 
-              <label className="inline-flex items-center">
+              <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  className="form-checkbox text-indigo-600 h-5 w-5 rounded border-gray-600 bg-gray-700 focus:ring-indigo-500"
+                  className="form-checkbox h-5 w-5 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
                   checked={isNoBombs}
                   onChange={e => {
                     setIsNoBombs(e.target.checked);
                     if (e.target.checked) setNumberOfBombs('0');
+                    else setNumberOfBombs('');
                   }}
                 />
                 <span className="ml-2 text-gray-300">No Bombs</span>
               </label>
 
-              <label className="inline-flex items-center">
+              <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  className="form-checkbox text-indigo-600 h-5 w-5 rounded border-gray-600 bg-gray-700 focus:ring-indigo-500"
+                  className="form-checkbox h-5 w-5 rounded border-gray-600 bg-gray-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-800"
                   checked={isNo3rdCondition}
                   onChange={e => setIsNo3rdCondition(e.target.checked)}
                 />
@@ -257,7 +381,7 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
                 htmlFor="numberOfDeaths"
                 className="block text-sm font-medium text-gray-300 mb-1"
               >
-                Number of Deaths
+                Number of Deaths (optional)
               </label>
               <input
                 type="number"
@@ -268,6 +392,7 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
                 value={numberOfDeaths}
                 onChange={e => setNumberOfDeaths(e.target.value)}
                 min="0"
+                placeholder="Enter number"
                 disabled={isNoDeaths}
               />
               {errors.numberOfDeaths && (
@@ -280,7 +405,7 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
                 htmlFor="numberOfBombs"
                 className="block text-sm font-medium text-gray-300 mb-1"
               >
-                Number of Bombs
+                Number of Bombs (optional)
               </label>
               <input
                 type="number"
@@ -291,27 +416,13 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose }) =>
                 value={numberOfBombs}
                 onChange={e => setNumberOfBombs(e.target.value)}
                 min="0"
+                placeholder="Enter number"
                 disabled={isNoBombs}
               />
               {errors.numberOfBombs && (
                 <p className="mt-1 text-sm text-red-500">{errors.numberOfBombs}</p>
               )}
             </div>
-          </div>
-
-          {/* Date Achieved */}
-          <div>
-            <label htmlFor="dateAchieved" className="block text-sm font-medium text-gray-300 mb-1">
-              Date Achieved (optional)
-            </label>
-            <input
-              type="date"
-              id="dateAchieved"
-              className="w-full px-3 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={dateAchieved}
-              onChange={e => setDateAchieved(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
-            />
           </div>
 
           {/* Links */}

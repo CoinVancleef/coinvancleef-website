@@ -41,18 +41,13 @@ export class DanmakuPointsCalculator {
       return 0;
     }
 
-    // First, get base points based on achievement type
-    let points = pointsData[achievementType];
-
-    // For low miss (1-3 deaths), calculate adjusted points
-    if (
-      achievementType === DanmakuPointsType.L1CC &&
-      input.numberOfDeaths &&
-      input.numberOfDeaths > 0
-    ) {
-      // Apply the low miss calculation
+    // For runs with deaths, apply low miss calculation regardless of achievement type
+    if (input.numberOfDeaths && input.numberOfDeaths > 0) {
       return this.calculateLowMissPoints(pointsData, input.numberOfDeaths);
     }
+
+    // Get base points based on achievement type
+    let points = pointsData[achievementType];
 
     return Math.round(points);
   }

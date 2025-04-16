@@ -26,18 +26,18 @@ export enum TH07ShotType {
  * Shot types for TH08 (Imperishable Night) - Final A
  */
 export enum TH08ShotTypeA {
-  BORDER_TEAM = 'Border Team',
-  MAGIC_TEAM = 'Magic Team',
-  SCARLET_TEAM = 'Scarlet Team',
-  GHOST_TEAM = 'Ghost Team',
-  REIMU = 'Reimu',
-  YUKARI = 'Yukari',
-  MARISA = 'Marisa',
-  ALICE = 'Alice',
-  SAKUYA = 'Sakuya',
-  REMILIA = 'Remilia',
-  YOUMU = 'Youmu',
-  YUYUKO = 'Yuyuko',
+  BORDER_TEAM = 'Border Team (Final A)',
+  MAGIC_TEAM = 'Magic Team (Final A)',
+  SCARLET_TEAM = 'Scarlet Team (Final A)',
+  GHOST_TEAM = 'Ghost Team (Final A)',
+  REIMU = 'Reimu (Final A)',
+  YUKARI = 'Yukari (Final A)',
+  MARISA = 'Marisa (Final A)',
+  ALICE = 'Alice (Final A)',
+  SAKUYA = 'Sakuya (Final A)',
+  REMILIA = 'Remilia (Final A)',
+  YOUMU = 'Youmu (Final A)',
+  YUYUKO = 'Yuyuko (Final A)',
 }
 
 /**

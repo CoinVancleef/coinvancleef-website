@@ -62,7 +62,7 @@ const UserClears: React.FC = () => {
   const getConditionString = clearEntry => {
     const conditions = [];
     if (clearEntry.isNoBombs) conditions.push('NB');
-    if (clearEntry.isNoDeaths) conditions.push('ND');
+    if (clearEntry.isNoDeaths) conditions.push('NM');
     if (clearEntry.isNo3rdCondition) conditions.push('NT');
     return conditions.length > 0 ? conditions.join(', ') : 'None';
   };

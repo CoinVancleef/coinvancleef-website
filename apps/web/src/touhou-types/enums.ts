@@ -83,7 +83,7 @@ export enum Platform {
  * Game name mapping for display purposes
  */
 export const GAME_DISPLAY_NAMES: Record<TouhouGame, string> = {
-  [TouhouGame.TH06]: 'Embodiment of Scarlet Devil',
+  [TouhouGame.TH06]: 'The Embodiment of Scarlet Devil',
   [TouhouGame.TH07]: 'Perfect Cherry Blossom',
   [TouhouGame.TH08]: 'Imperishable Night',
   [TouhouGame.TH09]: 'Phantasmagoria of Flower View',
@@ -97,6 +97,26 @@ export const GAME_DISPLAY_NAMES: Record<TouhouGame, string> = {
   [TouhouGame.TH16]: 'Hidden Star in Four Seasons',
   [TouhouGame.TH17]: 'Wily Beast and Weakest Creature',
   [TouhouGame.TH18]: 'Unconnected Marketeers',
+};
+
+/**
+ * Short game name mapping for display purposes when space is limited
+ */
+export const GAME_SHORT_NAMES: Record<TouhouGame, string> = {
+  [TouhouGame.TH06]: 'Th6 - EoSD',
+  [TouhouGame.TH07]: 'Th7 - PCB',
+  [TouhouGame.TH08]: 'Th8 - IN',
+  [TouhouGame.TH09]: 'Th9 - PoFV',
+  [TouhouGame.TH10]: 'Th10 - MoF',
+  [TouhouGame.TH11]: 'Th11 - SA',
+  [TouhouGame.TH12]: 'Th12 - UFO',
+  [TouhouGame.TH128]: 'Th12.8 - GFW',
+  [TouhouGame.TH13]: 'Th13 - TD',
+  [TouhouGame.TH14]: 'Th14 - DDC',
+  [TouhouGame.TH15]: 'Th15 - LoLK',
+  [TouhouGame.TH16]: 'Th16 - HSiFS',
+  [TouhouGame.TH17]: 'Th17 - WBaWC',
+  [TouhouGame.TH18]: 'Th18 - UM',
 };
 
 /**
