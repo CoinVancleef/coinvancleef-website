@@ -1,8 +1,11 @@
+import { PrismaClient, User } from 'database';
 import { Request, Response } from 'express';
-import { User } from 'database';
+
+// Define a User type that matches the structure expected in the context
 
 export interface Context {
   req: Request;
   res: Response;
+  prisma: PrismaClient;
   user?: User;
 }

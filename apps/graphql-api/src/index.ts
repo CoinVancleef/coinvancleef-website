@@ -9,6 +9,8 @@ import cors from 'cors';
 // @ts-ignore
 import dotenv from 'dotenv';
 import path from 'path';
+import { prisma } from 'database';
+import { getUserFromToken } from './utils/auth';
 
 // Load environment variables from multiple locations
 // First try the API directory
@@ -73,9 +75,26 @@ async function bootstrap() {
   // Create Apollo Server
   const server = new ApolloServer({
     schema,
-    context: ({ req, res }) => {
-      // Return the request and response objects which will be available in resolvers
-      return { req, res };
+    context: async ({ req, res }) => {
+      // Get token from authorization header
+      const token = req.headers.authorization || '';
+
+      // Get user from token if available
+      let user;
+      try {
+        user = await getUserFromToken(token);
+      } catch (error) {
+        // Log error but continue without user
+        console.error('Error retrieving user from token:', error);
+      }
+
+      // Return context with prisma and user if available
+      return {
+        req,
+        res,
+        prisma,
+        user,
+      };
     },
   });
 

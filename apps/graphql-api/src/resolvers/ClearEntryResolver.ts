@@ -1,5 +1,5 @@
 import { Resolver, Query, Mutation, Arg, Ctx, UseMiddleware } from 'type-graphql';
-import { ClearEntry, prisma } from 'database';
+import { ClearEntry, prisma, AchievementType } from 'database';
 import { ClearEntryModel } from '../types/ClearEntryModel';
 import {
   ClearEntryInput,
@@ -10,6 +10,9 @@ import { ClearEntryResponse, ClearEntriesResponse } from '../types/ClearEntryRes
 import { isAuth } from '../middleware/isAuth';
 import { isAdmin } from '../middleware/isAdmin';
 import { Context } from '../types/Context';
+import { DanmakuPointsCalculator } from '../utils/DanmakuPointsCalculator';
+import { WeightingCalculator } from '../utils/WeightingCalculator';
+import { TouhouGame } from '../../../web/src/touhou-types/enums';
 
 @Resolver()
 export class ClearEntryResolver {
@@ -42,21 +45,37 @@ export class ClearEntryResolver {
   @Query(() => ClearEntriesResponse)
   async userClearEntries(
     @Arg('userPublicUuid') userPublicUuid: string,
+    @Ctx() ctx: Context,
   ): Promise<ClearEntriesResponse> {
-    // First get the user to obtain the internal userId
-    const user = await prisma.user.findUnique({
-      where: { public_uuid: userPublicUuid },
-    });
+    let userId;
 
-    if (!user) {
-      return {
-        clearEntries: [],
-        totalCount: 0,
-      };
+    // Handle the "me" special case
+    if (userPublicUuid === 'me') {
+      if (!ctx.user) {
+        return {
+          clearEntries: [],
+          totalCount: 0,
+        };
+      }
+      userId = BigInt(ctx.user.id);
+    } else {
+      // First get the user to obtain the internal userId
+      const user = await prisma.user.findUnique({
+        where: { public_uuid: userPublicUuid },
+      });
+
+      if (!user) {
+        return {
+          clearEntries: [],
+          totalCount: 0,
+        };
+      }
+
+      userId = BigInt(user.id);
     }
 
     const clearEntries = await prisma.clearEntry.findMany({
-      where: { userId: BigInt(user.id) },
+      where: { userId },
       include: {
         createdBy: true,
       },
@@ -81,11 +100,33 @@ export class ClearEntryResolver {
         };
       }
 
+      // Calculate danmaku points using our calculator as a static utility
+      const calculationInput = {
+        game: data.game as TouhouGame,
+        shotType: data.shotType,
+        isNoDeaths: data.isNoDeaths,
+        isNoBombs: data.isNoBombs,
+        isNo3rdCondition: data.isNo3rdCondition,
+        numberOfDeaths: data.numberOfDeaths as 1 | 2 | 3 | undefined,
+      };
+
+      const danmakuPoints = DanmakuPointsCalculator.calculate(calculationInput);
+
+      // Determine achievement type based on the conditions
+      let achievementType = AchievementType.L1CC;
+      if (data.isNoDeaths && data.isNoBombs) {
+        achievementType = AchievementType.LNN;
+      } else if (data.isNoBombs && data.isNo3rdCondition) {
+        achievementType = AchievementType.LNB_PLUS;
+      } else if (data.isNoBombs) {
+        achievementType = AchievementType.LNB;
+      }
+
       const clearEntry = await prisma.clearEntry.create({
         data: {
           shotType: data.shotType,
           game: data.game,
-          achievementType: data.achievementType as any,
+          achievementType: achievementType,
           numberOfDeaths: data.numberOfDeaths,
           numberOfBombs: data.numberOfBombs,
           isNoDeaths: data.isNoDeaths,
@@ -95,10 +136,30 @@ export class ClearEntryResolver {
           videoLink: data.videoLink,
           dateAchieved: data.dateAchieved,
           userId: BigInt(ctx.user.id),
+          danmaku_points: danmakuPoints, // Use calculated points
         },
         include: {
           createdBy: true,
         },
+      });
+
+      // Update user's total danmaku points using the weighting calculator
+      // First get all user's clear entries
+      const userClearEntries = await prisma.clearEntry.findMany({
+        where: { userId: BigInt(ctx.user.id) },
+        select: { danmaku_points: true },
+      });
+
+      // Extract point values
+      const pointsArray = userClearEntries.map(entry => Number(entry.danmaku_points));
+
+      // Calculate weighted total
+      const totalPoints = WeightingCalculator.calculateTotalPoints(pointsArray);
+
+      // Update user's total points
+      await prisma.user.update({
+        where: { id: ctx.user.id },
+        data: { danmaku_points: totalPoints },
       });
 
       return { clearEntry };
@@ -192,25 +253,6 @@ export class ClearEntryResolver {
       // If danmaku points are provided, update them
       if (data.danmaku_points !== undefined) {
         updateData.danmaku_points = data.danmaku_points;
-
-        // If we're verifying the entry, update the user's total danmaku points
-        if (data.verified) {
-          const user = await prisma.user.findUnique({
-            where: { id: existingEntry.userId.toString() },
-          });
-
-          if (user) {
-            // Update user's danmaku points
-            await prisma.user.update({
-              where: { id: existingEntry.userId.toString() },
-              data: {
-                danmaku_points: {
-                  increment: data.danmaku_points,
-                },
-              },
-            });
-          }
-        }
       }
 
       const clearEntry = await prisma.clearEntry.update({
@@ -220,6 +262,32 @@ export class ClearEntryResolver {
           createdBy: true,
         },
       });
+
+      // If we're verifying the entry, recalculate the user's total danmaku points
+      if (data.verified) {
+        const userId = existingEntry.userId.toString();
+
+        // Get all verified clear entries for this user
+        const userClearEntries = await prisma.clearEntry.findMany({
+          where: {
+            userId: BigInt(userId),
+            verified: true,
+          },
+          select: { danmaku_points: true },
+        });
+
+        // Extract point values
+        const pointsArray = userClearEntries.map(entry => Number(entry.danmaku_points));
+
+        // Calculate weighted total using the static utility
+        const totalPoints = WeightingCalculator.calculateTotalPoints(pointsArray);
+
+        // Update user's total points
+        await prisma.user.update({
+          where: { id: userId },
+          data: { danmaku_points: totalPoints },
+        });
+      }
 
       return { clearEntry };
     } catch (error: any) {

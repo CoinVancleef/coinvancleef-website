@@ -1,0 +1,20 @@
+// Add this model to the prisma schema
+model Clear {
+  id              String   @id @default(cuid())
+  game            String
+  shotType        String
+  noBombs         Boolean  @default(false)
+  noMiss          Boolean  @default(false)
+  noThirdCondition Boolean @default(false)
+  deaths          Int?
+  bombs           Int?
+  videoLink       String?
+  replayLink      String?
+  danmakuPoints   Int      @default(0)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+} 

@@ -1,6 +1,6 @@
-import { TouhouGame } from '@touhou-types/enums';
-import { DANMAKU_POINTS_DATABASE } from '@touhou-types/danmakuPointsData';
-import type { DanmakuPointsData } from '@touhou-types/interfaces';
+import { TouhouGame } from '../../../web/src/touhou-types/enums';
+import { DANMAKU_POINTS_DATABASE } from '../../../web/src/touhou-types/danmakuPointsData';
+import type { DanmakuPointsData } from '../../../web/src/touhou-types/interfaces';
 
 export interface CalculationInput {
   game: TouhouGame;
