@@ -12,6 +12,21 @@ export class ClearEntryInput {
   @Field(() => String)
   achievementType!: AchievementType;
 
+  @Field(() => Int, { nullable: true })
+  numberOfDeaths?: number;
+
+  @Field(() => Int, { nullable: true })
+  numberOfBombs?: number;
+
+  @Field(() => Boolean, { nullable: true })
+  isNoDeaths?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  isNoBombs?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  isNo3rdCondition?: boolean;
+
   @Field(() => String, { nullable: true })
   replayLink?: string;
 
@@ -35,6 +50,21 @@ export class UpdateClearEntryInput {
 
   @Field(() => String, { nullable: true })
   achievementType?: AchievementType;
+
+  @Field(() => Int, { nullable: true })
+  numberOfDeaths?: number;
+
+  @Field(() => Int, { nullable: true })
+  numberOfBombs?: number;
+
+  @Field(() => Boolean, { nullable: true })
+  isNoDeaths?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  isNoBombs?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  isNo3rdCondition?: boolean;
 
   @Field(() => String, { nullable: true })
   replayLink?: string;

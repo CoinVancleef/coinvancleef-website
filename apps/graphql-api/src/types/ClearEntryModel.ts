@@ -19,6 +19,21 @@ export class ClearEntryModel implements Omit<ClearEntry, 'id' | 'userId' | 'crea
   @Field(() => Int)
   danmaku_points!: number;
 
+  @Field(() => Int, { nullable: true })
+  numberOfDeaths?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  numberOfBombs?: number | null;
+
+  @Field(() => Boolean, { nullable: true })
+  isNoDeaths?: boolean | null;
+
+  @Field(() => Boolean, { nullable: true })
+  isNoBombs?: boolean | null;
+
+  @Field(() => Boolean, { nullable: true })
+  isNo3rdCondition?: boolean | null;
+
   @Field(() => String, { nullable: true })
   replayLink?: string | null;
 

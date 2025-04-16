@@ -86,6 +86,11 @@ export class ClearEntryResolver {
           shotType: data.shotType,
           game: data.game,
           achievementType: data.achievementType as any,
+          numberOfDeaths: data.numberOfDeaths,
+          numberOfBombs: data.numberOfBombs,
+          isNoDeaths: data.isNoDeaths,
+          isNoBombs: data.isNoBombs,
+          isNo3rdCondition: data.isNo3rdCondition,
           replayLink: data.replayLink,
           videoLink: data.videoLink,
           dateAchieved: data.dateAchieved,
@@ -140,6 +145,11 @@ export class ClearEntryResolver {
       if (data.shotType) updateData.shotType = data.shotType;
       if (data.game) updateData.game = data.game;
       if (data.achievementType) updateData.achievementType = data.achievementType;
+      if (data.numberOfDeaths !== undefined) updateData.numberOfDeaths = data.numberOfDeaths;
+      if (data.numberOfBombs !== undefined) updateData.numberOfBombs = data.numberOfBombs;
+      if (data.isNoDeaths !== undefined) updateData.isNoDeaths = data.isNoDeaths;
+      if (data.isNoBombs !== undefined) updateData.isNoBombs = data.isNoBombs;
+      if (data.isNo3rdCondition !== undefined) updateData.isNo3rdCondition = data.isNo3rdCondition;
       if (data.replayLink !== undefined) updateData.replayLink = data.replayLink;
       if (data.videoLink !== undefined) updateData.videoLink = data.videoLink;
       if (data.dateAchieved) updateData.dateAchieved = data.dateAchieved;

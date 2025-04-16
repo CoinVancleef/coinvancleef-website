@@ -54,6 +54,11 @@ export type ClearEntry = {
   game: string;
   achievementType: AchievementType;
   danmaku_points: number;
+  numberOfDeaths?: number | null;
+  numberOfBombs?: number | null;
+  isNoDeaths?: boolean | null;
+  isNoBombs?: boolean | null;
+  isNo3rdCondition?: boolean | null;
   replayLink?: string | null;
   videoLink?: string | null;
   verified: boolean;

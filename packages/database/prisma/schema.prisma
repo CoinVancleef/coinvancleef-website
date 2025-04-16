@@ -53,6 +53,11 @@ model ClearEntry {
   game            String
   achievementType AchievementType
   danmaku_points  Int             @default(0)
+  numberOfDeaths  Int?            @map("number_of_deaths")
+  numberOfBombs   Int?            @map("number_of_bombs")
+  isNoDeaths      Boolean?        @default(false) @map("is_no_deaths")
+  isNoBombs       Boolean?        @default(false) @map("is_no_bombs")
+  isNo3rdCondition Boolean?       @default(false) @map("is_no_3rd_condition")
   replayLink      String?
   videoLink       String?
   verified        Boolean         @default(false)

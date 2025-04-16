@@ -12,6 +12,11 @@ input ClearEntryInput {
   achievementType: String!
   dateAchieved: DateTime
   game: String!
+  isNo3rdCondition: Boolean
+  isNoBombs: Boolean
+  isNoDeaths: Boolean
+  numberOfBombs: Int
+  numberOfDeaths: Int
   replayLink: String
   shotType: String!
   videoLink: String
@@ -39,6 +44,11 @@ type GQLClearEntryModel {
   danmaku_points: Int!
   dateAchieved: DateTime
   game: String!
+  isNo3rdCondition: Boolean
+  isNoBombs: Boolean
+  isNoDeaths: Boolean
+  numberOfBombs: Int
+  numberOfDeaths: Int
   public_uuid: String!
   replayLink: String
   shotType: String!
@@ -91,6 +101,11 @@ input UpdateClearEntryInput {
   achievementType: String
   dateAchieved: DateTime
   game: String
+  isNo3rdCondition: Boolean
+  isNoBombs: Boolean
+  isNoDeaths: Boolean
+  numberOfBombs: Int
+  numberOfDeaths: Int
   public_uuid: String!
   replayLink: String
   shotType: String
