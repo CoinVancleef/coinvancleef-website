@@ -4,6 +4,7 @@ import { UserInput, UpdateProfileInput } from '../inputs/UserInput';
 import { LoginInput } from '../inputs/LoginInput';
 import { UserResponse } from '../types/UserResponse';
 import { UserModel } from '../types/UserModel';
+import { PasswordChangeResponse } from '../types/PasswordChangeResponse';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { isAuth } from '../middleware/isAuth';
@@ -161,6 +162,7 @@ export class UserResolver {
         where: { public_uuid: ctx.user.public_uuid },
         data: {
           name: data.name !== undefined ? data.name : ctx.user.name,
+          email: data.email !== undefined ? data.email : ctx.user.email,
           twitterHandle:
             data.twitterHandle !== undefined ? data.twitterHandle : ctx.user.twitterHandle,
           youtubeChannel:
@@ -184,6 +186,85 @@ export class UserResolver {
       }
 
       return {
+        errors: [
+          { field: 'unknown', message: `Error: ${error.message || 'Something went wrong'}` },
+        ],
+      };
+    }
+  }
+
+  @Mutation(() => PasswordChangeResponse)
+  @UseMiddleware(isAuth)
+  async changePassword(
+    @Arg('currentPassword') currentPassword: string,
+    @Arg('newPassword') newPassword: string,
+    @Ctx() ctx: Context,
+  ): Promise<PasswordChangeResponse> {
+    try {
+      if (!ctx.user) {
+        return {
+          success: false,
+          message: 'Not authenticated',
+          errors: [{ field: 'auth', message: 'Not authenticated' }],
+        };
+      }
+
+      // Get the user with the password
+      const user = await prisma.user.findUnique({
+        where: { public_uuid: ctx.user.public_uuid },
+        select: {
+          id: true,
+          password: true,
+        },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'User not found',
+          errors: [{ field: 'auth', message: 'User not found' }],
+        };
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return {
+          success: false,
+          message: 'Current password is incorrect',
+          errors: [{ field: 'currentPassword', message: 'Current password is incorrect' }],
+        };
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update user password
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword },
+      });
+
+      return {
+        success: true,
+        message: 'Password changed successfully',
+      };
+    } catch (error: any) {
+      console.error('Change password error:', error);
+
+      if (error.message.includes('database')) {
+        return {
+          success: false,
+          message: 'Database error',
+          errors: [
+            { field: 'database', message: 'Database connection error. Please try again later.' },
+          ],
+        };
+      }
+
+      return {
+        success: false,
+        message: 'An error occurred',
         errors: [
           { field: 'unknown', message: `Error: ${error.message || 'Something went wrong'}` },
         ],

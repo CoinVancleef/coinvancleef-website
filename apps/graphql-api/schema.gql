@@ -87,6 +87,7 @@ input LoginInput {
 }
 
 type Mutation {
+  changePassword(currentPassword: String!, newPassword: String!): PasswordChangeResponse!
   createClearEntry(data: ClearEntryInput!): ClearEntryResponse!
   deleteClearEntry(publicUuid: String!): Boolean!
   login(data: LoginInput!): UserResponse!
@@ -94,6 +95,12 @@ type Mutation {
   updateClearEntry(data: UpdateClearEntryInput!): ClearEntryResponse!
   updateProfile(data: UpdateProfileInput!): UserResponse!
   verifyClearEntry(data: VerifyClearEntryInput!): ClearEntryResponse!
+}
+
+type PasswordChangeResponse {
+  errors: [FieldError!]
+  message: String
+  success: Boolean!
 }
 
 type Query {
@@ -123,6 +130,7 @@ input UpdateClearEntryInput {
 
 input UpdateProfileInput {
   discord: String
+  email: String
   name: String
   twitchChannel: String
   twitterHandle: String

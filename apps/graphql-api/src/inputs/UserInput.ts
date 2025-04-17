@@ -45,6 +45,10 @@ export class UpdateProfileInput {
   name?: string;
 
   @Field({ nullable: true })
+  @IsEmail()
+  email?: string;
+
+  @Field({ nullable: true })
   twitterHandle?: string;
 
   @Field({ nullable: true })
