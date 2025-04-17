@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useAuth } from '../../contexts/AuthContext';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 // Query to get current user data
 const GET_USER_PROFILE = gql`
@@ -64,14 +65,7 @@ export default function EditProfilePage() {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
-
-    // Debug: log token
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      console.log('Current token available:', !!token);
-      console.log('Auth user available:', !!authUser);
-    }
-  }, [authLoading, isAuthenticated, router, authUser]);
+  }, [authLoading, isAuthenticated, router]);
 
   // Get user profile data
   const { data, loading } = useQuery(GET_USER_PROFILE, {
@@ -153,8 +147,8 @@ export default function EditProfilePage() {
   // Show loading state while checking auth or fetching data
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-900">
+        <LoadingSpinner />
       </div>
     );
   }
@@ -162,25 +156,25 @@ export default function EditProfilePage() {
   return (
     <>
       <Head>
-        <title>Edit Profile | Coinvancleef</title>
+        <title>Edit Profile</title>
       </Head>
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-10 px-4">
+      <main className="min-h-screen bg-gray-900 py-10 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-6">
+          <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mb-8">
+            <div className="bg-gradient-to-r from-indigo-800 to-purple-700 px-6 py-6">
               <h1 className="text-2xl font-bold text-white">Edit Profile</h1>
             </div>
 
             <div className="p-6">
               {errorMessage && (
-                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
+                <div className="bg-red-900/50 border-l-4 border-red-500 text-white p-4 mb-6">
                   <p className="font-bold">Error</p>
                   <p>{errorMessage}</p>
                 </div>
               )}
 
               {successMessage && (
-                <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+                <div className="bg-green-900/50 border-l-4 border-green-500 text-white p-4 mb-6">
                   <p className="font-bold">Success</p>
                   <p>{successMessage}</p>
                 </div>
@@ -188,7 +182,7 @@ export default function EditProfilePage() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-300">
                     Name
                   </label>
                   <div className="mt-1">
@@ -198,26 +192,26 @@ export default function EditProfilePage() {
                       type="text"
                       value={name}
                       onChange={e => setName(e.target.value)}
-                      className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
+                      className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
                         fieldErrors.name ? 'border-red-500' : ''
                       }`}
                     />
                     {fieldErrors.name && (
-                      <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+                      <p className="mt-1 text-sm text-red-400">{fieldErrors.name}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h2 className="text-lg font-medium text-gray-900">Social Media</h2>
-                  <p className="text-sm text-gray-500">
+                  <h2 className="text-lg font-medium text-gray-200">Social Media</h2>
+                  <p className="text-sm text-gray-400">
                     Add your social media handles to connect with other players
                   </p>
 
                   <div>
                     <label
                       htmlFor="twitterHandle"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-300"
                     >
                       Twitter
                     </label>
@@ -229,12 +223,12 @@ export default function EditProfilePage() {
                         value={twitterHandle}
                         onChange={e => setTwitterHandle(e.target.value)}
                         placeholder="@username"
-                        className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
+                        className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
                           fieldErrors.twitterHandle ? 'border-red-500' : ''
                         }`}
                       />
                       {fieldErrors.twitterHandle && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.twitterHandle}</p>
+                        <p className="mt-1 text-sm text-red-400">{fieldErrors.twitterHandle}</p>
                       )}
                     </div>
                   </div>
@@ -242,7 +236,7 @@ export default function EditProfilePage() {
                   <div>
                     <label
                       htmlFor="youtubeChannel"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-300"
                     >
                       YouTube Channel
                     </label>
@@ -254,12 +248,12 @@ export default function EditProfilePage() {
                         value={youtubeChannel}
                         onChange={e => setYoutubeChannel(e.target.value)}
                         placeholder="Channel ID or URL"
-                        className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
+                        className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
                           fieldErrors.youtubeChannel ? 'border-red-500' : ''
                         }`}
                       />
                       {fieldErrors.youtubeChannel && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.youtubeChannel}</p>
+                        <p className="mt-1 text-sm text-red-400">{fieldErrors.youtubeChannel}</p>
                       )}
                     </div>
                   </div>
@@ -267,7 +261,7 @@ export default function EditProfilePage() {
                   <div>
                     <label
                       htmlFor="twitchChannel"
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-300"
                     >
                       Twitch Channel
                     </label>
@@ -279,18 +273,18 @@ export default function EditProfilePage() {
                         value={twitchChannel}
                         onChange={e => setTwitchChannel(e.target.value)}
                         placeholder="username"
-                        className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
+                        className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
                           fieldErrors.twitchChannel ? 'border-red-500' : ''
                         }`}
                       />
                       {fieldErrors.twitchChannel && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.twitchChannel}</p>
+                        <p className="mt-1 text-sm text-red-400">{fieldErrors.twitchChannel}</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="discord" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="discord" className="block text-sm font-medium text-gray-300">
                       Discord
                     </label>
                     <div className="mt-1">
@@ -301,12 +295,12 @@ export default function EditProfilePage() {
                         value={discord}
                         onChange={e => setDiscord(e.target.value)}
                         placeholder="username#0000"
-                        className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
+                        className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
                           fieldErrors.discord ? 'border-red-500' : ''
                         }`}
                       />
                       {fieldErrors.discord && (
-                        <p className="mt-1 text-sm text-red-600">{fieldErrors.discord}</p>
+                        <p className="mt-1 text-sm text-red-400">{fieldErrors.discord}</p>
                       )}
                     </div>
                   </div>
@@ -315,7 +309,7 @@ export default function EditProfilePage() {
                 <div className="flex items-center justify-between pt-4">
                   <Link
                     href="/profile"
-                    className="text-indigo-600 hover:text-indigo-900 font-medium"
+                    className="text-indigo-400 hover:text-indigo-300 font-medium"
                   >
                     Cancel
                   </Link>

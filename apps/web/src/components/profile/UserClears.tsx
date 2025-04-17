@@ -1,7 +1,8 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import ClearsTable, { ClearEntry } from './ClearsTable';
 import LoadingSpinner from '../LoadingSpinner';
+import ClearEntryModal from './ClearEntryModal';
 
 // Create a context for refetching user clears
 export const UserClearsContext = createContext({
@@ -36,10 +37,23 @@ export const GET_USER_CLEAR_ENTRIES = gql`
 `;
 
 const UserClears: React.FC = () => {
+  const [entryToEdit, setEntryToEdit] = useState<ClearEntry | undefined>(undefined);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const { data, loading, error, refetch } = useQuery(GET_USER_CLEAR_ENTRIES, {
     fetchPolicy: 'network-only', // Don't use cache, always make a network request
     notifyOnNetworkStatusChange: true, // This will trigger loading state on refetch
   });
+
+  const handleEditClick = (entry: ClearEntry) => {
+    setEntryToEdit(entry);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEntryToEdit(undefined);
+  };
 
   React.useEffect(() => {
     console.log('UserClears component mounted or data changed');
@@ -102,7 +116,19 @@ const UserClears: React.FC = () => {
 
   return (
     <UserClearsContext.Provider value={clearsContextValue}>
-      <ClearsTable clearEntries={clearEntries as ClearEntry[]} showIndex={true} />
+      <ClearsTable
+        clearEntries={clearEntries as ClearEntry[]}
+        showIndex={true}
+        isOwnProfile={true}
+        onEdit={handleEditClick}
+      />
+      {isEditModalOpen && (
+        <ClearEntryModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          entryToEdit={entryToEdit}
+        />
+      )}
     </UserClearsContext.Provider>
   );
 };

@@ -35,11 +35,17 @@ export type User = {
   password: string;
   role: Role;
   danmaku_points: number;
+  totalClears: number;
+  lnn: number;
+  lnb: number;
+  l1cc: number;
+  globalRank?: number | null;
   twitterHandle?: string | null;
   youtubeChannel?: string | null;
   twitchChannel?: string | null;
   discord?: string | null;
   country?: string | null;
+  profilePicture?: string | null;
   createdAt: Date;
   updatedAt: Date;
   clearEntries?: ClearEntry[];
@@ -52,6 +58,7 @@ export type ClearEntry = {
   userId: bigint;
   shotType: string;
   game: string;
+  difficulty: string;
   achievementType: AchievementType;
   danmaku_points: number;
   numberOfDeaths?: number | null;

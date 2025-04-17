@@ -11,6 +11,7 @@ type ClearEntriesResponse {
 input ClearEntryInput {
   achievementType: String!
   dateAchieved: DateTime
+  difficulty: String = "Lunatic"
   game: String!
   isNo3rdCondition: Boolean
   isNoBombs: Boolean
@@ -43,6 +44,7 @@ type GQLClearEntryModel {
   createdBy: GQLUserModel!
   danmaku_points: Int!
   dateAchieved: DateTime
+  difficulty: String!
   game: String!
   isNo3rdCondition: Boolean
   isNoBombs: Boolean
@@ -64,9 +66,15 @@ type GQLUserModel {
   danmaku_points: Int!
   discord: String
   email: String!
+  globalRank: Int
+  l1cc: Int!
+  lnb: Int!
+  lnn: Int!
   name: String
+  profilePicture: String
   public_uuid: String!
   role: String!
+  totalClears: Int!
   twitchChannel: String
   twitterHandle: String
   updatedAt: DateTime!
@@ -92,6 +100,7 @@ type Query {
   clearEntries: ClearEntriesResponse!
   clearEntry(publicUuid: String!): GQLClearEntryModel
   dbTest: String!
+  leaderboard: [GQLUserModel!]!
   user(publicUuid: String!): GQLUserModel
   userClearEntries(userPublicUuid: String!): ClearEntriesResponse!
   users: [GQLUserModel!]!

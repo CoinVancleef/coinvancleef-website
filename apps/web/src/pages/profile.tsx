@@ -6,7 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import SocialLinks from '../components/profile/SocialLinks';
-import LogoutButton from '../components/profile/LogoutButton';
 import RecentClears from '../components/profile/RecentClears';
 import ClearEntries from '../components/profile/ClearEntries';
 
@@ -18,6 +17,11 @@ const GET_USER_PROFILE = gql`
       name
       role
       danmaku_points
+      totalClears
+      lnn
+      lnb
+      l1cc
+      globalRank
       twitterHandle
       youtubeChannel
       twitchChannel
@@ -68,10 +72,18 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col items-center p-8 bg-gray-800 rounded-lg shadow-md mb-8 w-full">
-              <ProfileHeader name={userData.name} danmakuPoints={userData.danmaku_points} />
+            <div className="bg-gray-800 rounded-lg shadow-md mb-8 w-full overflow-hidden">
+              <ProfileHeader
+                name={userData.name}
+                danmakuPoints={userData.danmaku_points}
+                totalClears={userData.totalClears}
+                lnn={userData.lnn}
+                lnb={userData.lnb}
+                l1cc={userData.l1cc}
+                globalRank={userData.globalRank}
+              />
 
-              <div className="bg-gray-800 rounded-lg shadow-md p-6 mb-8 w-full">
+              <div className="p-6 mb-6">
                 <h2 className="text-xl font-bold mb-4 text-gray-100 border-b border-gray-700 pb-2">
                   Social Links
                 </h2>
@@ -94,16 +106,12 @@ export default function ProfilePage() {
                   }
                 />
               </div>
-
-              <div className="text-center">
-                <LogoutButton />
-              </div>
             </div>
 
             <RecentClears />
             <ClearEntries />
 
-            <div className="text-center">
+            <div className="text-center mt-8">
               <Link
                 href="/"
                 className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"

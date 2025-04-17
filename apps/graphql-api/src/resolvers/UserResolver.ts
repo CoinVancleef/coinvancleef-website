@@ -190,4 +190,32 @@ export class UserResolver {
       };
     }
   }
+
+  // Get all users for leaderboard (no sensitive data)
+  @Query(() => [UserModel])
+  async leaderboard(): Promise<UserModel[]> {
+    return prisma.user.findMany({
+      orderBy: {
+        danmaku_points: 'desc',
+      },
+      select: {
+        public_uuid: true,
+        name: true,
+        role: true,
+        danmaku_points: true,
+        totalClears: true,
+        lnn: true,
+        lnb: true,
+        l1cc: true,
+        globalRank: true,
+        twitterHandle: true,
+        youtubeChannel: true,
+        twitchChannel: true,
+        discord: true,
+        country: true,
+        profilePicture: true,
+        createdAt: true,
+      },
+    });
+  }
 }

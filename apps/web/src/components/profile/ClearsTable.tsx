@@ -11,6 +11,7 @@ export interface ClearEntry {
   public_uuid: string;
   game: string;
   shotType: string;
+  difficulty?: string;
   achievementType?: string;
   danmaku_points: number;
   isNoDeaths: boolean;
@@ -27,9 +28,16 @@ export interface ClearEntry {
 interface ClearsTableProps {
   clearEntries: ClearEntry[];
   showIndex?: boolean;
+  onEdit?: (entry: ClearEntry) => void;
+  isOwnProfile?: boolean;
 }
 
-const ClearsTable: React.FC<ClearsTableProps> = ({ clearEntries, showIndex = true }) => {
+const ClearsTable: React.FC<ClearsTableProps> = ({
+  clearEntries,
+  showIndex = true,
+  onEdit,
+  isOwnProfile = false,
+}) => {
   // Get conditions as a string (NB = No Bombs, NM = No Miss, NT = No Third Condition)
   const getConditionString = (clearEntry: ClearEntry) => {
     const conditions = [];
@@ -122,7 +130,7 @@ const ClearsTable: React.FC<ClearsTableProps> = ({ clearEntries, showIndex = tru
         {clearEntries.map((clearEntry, index) => (
           <tr
             key={clearEntry.public_uuid}
-            className={index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'}
+            className={`${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'} group relative`}
           >
             {showIndex && (
               <td className="px-3 py-4 whitespace-nowrap text-sm font-semibold text-gray-300">
@@ -155,9 +163,9 @@ const ClearsTable: React.FC<ClearsTableProps> = ({ clearEntries, showIndex = tru
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 font-medium">
               {clearEntry.danmaku_points.toLocaleString()}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm">
+            <td className="px-6 py-4 whitespace-nowrap text-sm pr-8">
               {hasLinks(clearEntry) ? (
-                <div className="flex space-x-2">
+                <div className="flex flex-col space-y-1">
                   {clearEntry.videoLink && (
                     <a
                       href={clearEntry.videoLink}
@@ -183,6 +191,22 @@ const ClearsTable: React.FC<ClearsTableProps> = ({ clearEntries, showIndex = tru
                 <span className="text-gray-500">None</span>
               )}
             </td>
+            {isOwnProfile && onEdit && (
+              <button
+                onClick={() => onEdit(clearEntry)}
+                className="absolute top-1/2 right-2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-indigo-400 transition-opacity duration-200 focus:outline-none"
+                title="Edit clear entry"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+              </button>
+            )}
           </tr>
         ))}
       </tbody>

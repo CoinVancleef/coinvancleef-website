@@ -10,9 +10,10 @@ interface GameSelectorProps {
   game: string;
   setGame: (game: string) => void;
   error?: string;
+  disabled?: boolean;
 }
 
-const GameSelector: React.FC<GameSelectorProps> = ({ game, setGame, error }) => {
+const GameSelector: React.FC<GameSelectorProps> = ({ game, setGame, error, disabled }) => {
   const [isGameDropdownOpen, setIsGameDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -40,8 +41,11 @@ const GameSelector: React.FC<GameSelectorProps> = ({ game, setGame, error }) => 
           type="button"
           className={`flex items-center justify-between w-full px-3 py-2 rounded bg-gray-700 border ${
             error ? 'border-red-500' : 'border-gray-600'
-          } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+          } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            disabled ? 'opacity-80 cursor-not-allowed' : ''
+          }`}
           onClick={() => setIsGameDropdownOpen(!isGameDropdownOpen)}
+          disabled={disabled}
         >
           {game ? (
             <div className="flex items-center">
@@ -64,7 +68,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({ game, setGame, error }) => 
           </svg>
         </button>
 
-        {isGameDropdownOpen && (
+        {isGameDropdownOpen && !disabled && (
           <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
             <ul className="py-1">
               {Object.entries(TouhouGame).map(([_, value]) => (

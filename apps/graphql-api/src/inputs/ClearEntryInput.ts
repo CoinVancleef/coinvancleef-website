@@ -9,6 +9,9 @@ export class ClearEntryInput {
   @Field(() => String)
   game!: string;
 
+  @Field(() => String, { nullable: true, defaultValue: 'Lunatic' })
+  difficulty?: string;
+
   @Field(() => String)
   achievementType!: AchievementType;
 

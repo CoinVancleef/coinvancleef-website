@@ -6,7 +6,7 @@ import LoadingSpinner from '../LoadingSpinner';
 
 const RecentClears: React.FC = () => {
   const { data, loading, error } = useQuery(GET_USER_CLEAR_ENTRIES, {
-    fetchPolicy: 'cache-first', // Use cache if available to avoid redundant network requests
+    fetchPolicy: 'cache-first',
   });
 
   return (

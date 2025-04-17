@@ -11,6 +11,7 @@ interface ShotTypeSelectorProps {
   shotType: string;
   setShotType: (shotType: string) => void;
   error?: string;
+  disabled?: boolean;
 }
 
 const ShotTypeSelector: React.FC<ShotTypeSelectorProps> = ({
@@ -18,6 +19,7 @@ const ShotTypeSelector: React.FC<ShotTypeSelectorProps> = ({
   shotType,
   setShotType,
   error,
+  disabled,
 }) => {
   return (
     <div>
@@ -28,10 +30,12 @@ const ShotTypeSelector: React.FC<ShotTypeSelectorProps> = ({
         id="shotType"
         className={`w-full px-3 py-2 rounded bg-gray-700 border ${
           error ? 'border-red-500' : 'border-gray-600'
-        } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+        } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+          !game || disabled ? 'opacity-80 cursor-not-allowed' : ''
+        }`}
         value={shotType}
         onChange={e => setShotType(e.target.value)}
-        disabled={!game}
+        disabled={!game || disabled}
       >
         <option value="">Select Shot Type</option>
 

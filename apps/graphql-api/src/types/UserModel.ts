@@ -13,7 +13,7 @@ export class UserModel implements Omit<User, 'password' | 'clearEntries' | 'id'>
   email!: string;
 
   @Field(() => String, { nullable: true })
-  name: string | null = null;
+  name?: string | null;
 
   // Don't expose the password
 
@@ -22,6 +22,21 @@ export class UserModel implements Omit<User, 'password' | 'clearEntries' | 'id'>
 
   @Field(() => Int)
   danmaku_points!: number;
+
+  @Field(() => Int)
+  totalClears!: number;
+
+  @Field(() => Int)
+  lnn!: number;
+
+  @Field(() => Int)
+  lnb!: number;
+
+  @Field(() => Int)
+  l1cc!: number;
+
+  @Field(() => Int, { nullable: true })
+  globalRank?: number | null;
 
   @Field(() => String, { nullable: true })
   twitterHandle?: string | null;
@@ -37,6 +52,9 @@ export class UserModel implements Omit<User, 'password' | 'clearEntries' | 'id'>
 
   @Field(() => String, { nullable: true })
   country?: string | null;
+
+  @Field(() => String, { nullable: true })
+  profilePicture?: string | null;
 
   @Field(() => Date)
   createdAt!: Date;

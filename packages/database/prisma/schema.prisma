@@ -17,11 +17,17 @@ model User {
   password       String
   role           Role         @default(USER)
   danmaku_points Int          @default(0)
+  totalClears    Int          @default(0)
+  lnn            Int          @default(0)
+  lnb            Int          @default(0)
+  l1cc           Int          @default(0)
+  globalRank     Int?
   twitterHandle  String?
   youtubeChannel String?
   twitchChannel  String?
   discord        String?
   country        String?
+  profilePicture String?
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   clearEntries   ClearEntry[]
@@ -35,6 +41,7 @@ model ClearEntry {
   userId           BigInt          @map("user_id")
   shotType         String
   game             String
+  difficulty       String          @default("Lunatic")
   achievementType  AchievementType
   danmaku_points   Int             @default(0)
   replayLink       String?

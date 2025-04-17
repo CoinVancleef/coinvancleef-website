@@ -97,79 +97,179 @@ export class ClearEntryResolver {
     @Ctx() ctx: Context,
   ): Promise<ClearEntryResponse> {
     try {
-      if (!ctx.user) {
-        return {
-          errors: [{ field: 'auth', message: 'Not authenticated' }],
-        };
-      }
+      // Get user ID from request
+      const userId = ctx.user!.id;
 
-      // Calculate danmaku points using our calculator as a static utility
-      const calculationInput = {
+      // Calculate danmaku points for this entry
+      const points = DanmakuPointsCalculator.calculate({
         game: data.game as TouhouGame,
         shotType: data.shotType,
-        isNoDeaths: data.isNoDeaths,
-        isNoBombs: data.isNoBombs,
-        isNo3rdCondition: data.isNo3rdCondition,
+        isNoDeaths: data.isNoDeaths || false,
+        isNoBombs: data.isNoBombs || false,
+        isNo3rdCondition: data.isNo3rdCondition || false,
         numberOfDeaths: data.numberOfDeaths as 1 | 2 | 3 | undefined,
-      };
+      });
 
-      const danmakuPoints = DanmakuPointsCalculator.calculate(calculationInput);
+      // Check if the user already has a clear entry for this game, difficulty, and shot type
+      const existingEntry = await prisma.clearEntry.findFirst({
+        where: {
+          userId: BigInt(userId),
+          game: data.game,
+          difficulty: data.difficulty || 'Lunatic',
+          shotType: data.shotType,
+        },
+      });
 
-      // Determine achievement type based on the conditions
-      let achievementType = AchievementType.L1CC;
-      if (data.isNoDeaths && data.isNoBombs) {
-        achievementType = AchievementType.LNN;
-      } else if (data.isNoBombs && data.isNo3rdCondition) {
-        achievementType = AchievementType.LNB_PLUS;
-      } else if (data.isNoBombs) {
-        achievementType = AchievementType.LNB;
+      // If an existing entry is found, compare the danmaku points
+      if (existingEntry) {
+        if (points <= existingEntry.danmaku_points) {
+          // The new entry has equal or fewer points than the existing one
+          return {
+            errors: [
+              {
+                field: 'danmaku_points',
+                message: `You've already submitted a clear for ${data.game} ${
+                  data.difficulty || 'Lunatic'
+                } ${data.shotType} that is valued higher or equal to this one (${
+                  existingEntry.danmaku_points
+                } DP). Delete the previous clear if you want to submit this one.`,
+              },
+            ],
+          };
+        } else {
+          // The new entry has more points - delete the old one
+          await prisma.clearEntry.delete({
+            where: { id: existingEntry.id },
+          });
+        }
       }
 
+      // Determine the achievement type
+      const achievementType = this.determineAchievementType(data);
+
+      // Create the clear entry
       const clearEntry = await prisma.clearEntry.create({
         data: {
+          userId: BigInt(userId),
           shotType: data.shotType,
           game: data.game,
-          achievementType: achievementType,
-          numberOfDeaths: data.numberOfDeaths,
-          numberOfBombs: data.numberOfBombs,
-          isNoDeaths: data.isNoDeaths,
-          isNoBombs: data.isNoBombs,
-          isNo3rdCondition: data.isNo3rdCondition,
+          difficulty: data.difficulty || 'Lunatic',
+          achievementType,
+          danmaku_points: points,
           replayLink: data.replayLink,
           videoLink: data.videoLink,
           dateAchieved: data.dateAchieved,
-          userId: BigInt(ctx.user.id),
-          danmaku_points: danmakuPoints, // Use calculated points
+          isNoDeaths: data.isNoDeaths,
+          isNoBombs: data.isNoBombs,
+          isNo3rdCondition: data.isNo3rdCondition,
+          numberOfDeaths: data.numberOfDeaths,
+          numberOfBombs: data.numberOfBombs,
         },
         include: {
           createdBy: true,
         },
       });
 
-      // Update user's total danmaku points using the weighting calculator
-      // First get all user's clear entries
-      const userClearEntries = await prisma.clearEntry.findMany({
-        where: { userId: BigInt(ctx.user.id) },
-        select: { danmaku_points: true },
-      });
+      // Update user statistics
+      await this.updateUserStatistics(userId);
 
-      // Extract point values
-      const pointsArray = userClearEntries.map(entry => Number(entry.danmaku_points));
-
-      // Calculate weighted total
-      const totalPoints = WeightingCalculator.calculateTotalPoints(pointsArray);
-
-      // Update user's total points
-      await prisma.user.update({
-        where: { id: ctx.user.id },
-        data: { danmaku_points: totalPoints },
-      });
+      // Update global rankings
+      await this.updateGlobalRankings();
 
       return { clearEntry };
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error creating clear entry:', error);
       return {
-        errors: [{ field: 'server', message: `Error: ${error.message || 'Something went wrong'}` }],
+        errors: [
+          {
+            field: 'server',
+            message: 'An unexpected error occurred while creating the clear entry.',
+          },
+        ],
       };
+    }
+  }
+
+  /**
+   * Helper method to determine achievement type based on the input data
+   */
+  private determineAchievementType(data: ClearEntryInput): AchievementType {
+    if (data.isNoDeaths && data.isNoBombs) {
+      return AchievementType.LNN;
+    } else if (data.isNoBombs && data.isNo3rdCondition) {
+      return AchievementType.LNB_PLUS;
+    } else if (data.isNoBombs) {
+      return AchievementType.LNB;
+    } else {
+      return AchievementType.L1CC;
+    }
+  }
+
+  /**
+   * Helper method to update user statistics after a clear is added
+   */
+  private async updateUserStatistics(userId: string): Promise<void> {
+    // Get all clear entries for the user
+    const clearEntries = await prisma.clearEntry.findMany({
+      where: { userId: BigInt(userId) },
+    });
+
+    // Calculate statistics
+    const totalClears = clearEntries.length;
+
+    // Count LNN achievements (highest tier)
+    const lnnEntries = clearEntries.filter(entry => entry.achievementType === AchievementType.LNN);
+    const lnn = lnnEntries.length;
+
+    // Count LNB achievements (includes LNB, LNB_PLUS)
+    const lnbEntries = clearEntries.filter(
+      entry =>
+        entry.achievementType === AchievementType.LNB ||
+        entry.achievementType === AchievementType.LNB_PLUS,
+    );
+
+    // Count L1CC direct achievements
+    const l1ccEntries = clearEntries.filter(
+      entry => entry.achievementType === AchievementType.L1CC,
+    );
+
+    // LNB count includes direct LNB/LNB+ achievements plus all LNN achievements
+    const lnb = lnbEntries.length + lnn;
+
+    // L1CC count includes direct L1CC achievements plus all LNB/LNB+ and LNN achievements
+    const l1cc = l1ccEntries.length + lnbEntries.length + lnn;
+
+    // Calculate total danmaku points
+    const danmaku_points = clearEntries.reduce((sum, entry) => sum + entry.danmaku_points, 0);
+
+    // Update user record
+    await prisma.user.update({
+      where: { id: BigInt(userId) },
+      data: {
+        totalClears,
+        lnn,
+        lnb,
+        l1cc,
+        danmaku_points,
+      },
+    });
+  }
+
+  /**
+   * Helper method to update global rankings for all users
+   */
+  private async updateGlobalRankings(): Promise<void> {
+    // Get all users ordered by danmaku points (descending)
+    const users = await prisma.user.findMany({
+      orderBy: { danmaku_points: 'desc' },
+    });
+
+    // Update each user's global rank
+    for (let i = 0; i < users.length; i++) {
+      await prisma.user.update({
+        where: { id: users[i].id },
+        data: { globalRank: i + 1 }, // Ranks start at 1
+      });
     }
   }
 
@@ -198,8 +298,16 @@ export class ClearEntryResolver {
         };
       }
 
+      // Log IDs for debugging
+      console.log('Entry user ID:', existingEntry.userId.toString(), typeof existingEntry.userId);
+      console.log('Context user ID:', ctx.user.id, typeof ctx.user.id);
+
+      // Fix the ID comparison by converting both to strings and trimming any 'n' suffix
+      const entryUserId = existingEntry.userId.toString().replace('n', '');
+      const contextUserId = ctx.user.id.toString().replace('n', '');
+
       // Check if user is the owner or an admin
-      if (existingEntry.userId.toString() !== ctx.user.id && ctx.user.role !== 'ADMIN') {
+      if (entryUserId !== contextUserId && ctx.user.role !== 'ADMIN') {
         return {
           errors: [{ field: 'auth', message: 'Not authorized to update this entry' }],
         };
@@ -218,6 +326,31 @@ export class ClearEntryResolver {
       if (data.videoLink !== undefined) updateData.videoLink = data.videoLink;
       if (data.dateAchieved) updateData.dateAchieved = data.dateAchieved;
 
+      // Recalculate danmaku points
+      if (
+        data.isNoDeaths !== undefined ||
+        data.isNoBombs !== undefined ||
+        data.isNo3rdCondition !== undefined
+      ) {
+        const gameValue = data.game || existingEntry.game;
+        const points = DanmakuPointsCalculator.calculate({
+          game: gameValue as unknown as TouhouGame,
+          shotType: data.shotType || existingEntry.shotType,
+          isNoDeaths: data.isNoDeaths !== undefined ? data.isNoDeaths : existingEntry.isNoDeaths,
+          isNoBombs: data.isNoBombs !== undefined ? data.isNoBombs : existingEntry.isNoBombs,
+          isNo3rdCondition:
+            data.isNo3rdCondition !== undefined
+              ? data.isNo3rdCondition
+              : existingEntry.isNo3rdCondition,
+          numberOfDeaths:
+            data.numberOfDeaths !== undefined
+              ? (data.numberOfDeaths as 1 | 2 | 3 | undefined)
+              : (existingEntry.numberOfDeaths as 1 | 2 | 3 | undefined),
+        });
+
+        updateData.danmaku_points = points;
+      }
+
       const clearEntry = await prisma.clearEntry.update({
         where: { public_uuid: data.public_uuid },
         data: updateData,
@@ -225,6 +358,12 @@ export class ClearEntryResolver {
           createdBy: true,
         },
       });
+
+      // Update user statistics after update
+      await this.updateUserStatistics(ctx.user.id);
+
+      // Update global rankings
+      await this.updateGlobalRankings();
 
       return { clearEntry };
     } catch (error: any) {
@@ -320,14 +459,24 @@ export class ClearEntryResolver {
         return false;
       }
 
+      // Fix the ID comparison by converting both to strings and trimming any 'n' suffix
+      const entryUserId = existingEntry.userId.toString().replace('n', '');
+      const contextUserId = ctx.user.id.toString().replace('n', '');
+
       // Check if user is the owner or an admin
-      if (existingEntry.userId.toString() !== ctx.user.id && ctx.user.role !== 'ADMIN') {
+      if (entryUserId !== contextUserId && ctx.user.role !== 'ADMIN') {
         return false;
       }
 
       await prisma.clearEntry.delete({
         where: { public_uuid: publicUuid },
       });
+
+      // Update user statistics after deletion
+      await this.updateUserStatistics(ctx.user.id);
+
+      // Update global rankings
+      await this.updateGlobalRankings();
 
       return true;
     } catch (error) {

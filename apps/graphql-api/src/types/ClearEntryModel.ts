@@ -14,6 +14,9 @@ export class ClearEntryModel implements Omit<ClearEntry, 'id' | 'userId' | 'crea
   game!: string;
 
   @Field(() => String)
+  difficulty!: string;
+
+  @Field(() => String)
   achievementType!: AchievementType;
 
   @Field(() => Int)
