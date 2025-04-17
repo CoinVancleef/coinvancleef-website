@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Head from 'next/head';
 import { gql, useQuery } from '@apollo/client';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -33,22 +34,36 @@ const GET_USER_PROFILE = gql`
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { uuid } = router.query;
   const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
 
-  // Redirect if not authenticated
+  // Determine if viewing own profile or someone else's
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (uuid && user) {
+      setIsOwnProfile(uuid === user.public_uuid);
+    } else {
+      setIsOwnProfile(true);
+    }
+  }, [uuid, user]);
+
+  // Redirect if not authenticated and trying to view own profile
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated && !uuid) {
       router.push('/login');
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router, uuid]);
+
+  // Get profile UUID to query
+  const profileUuid = uuid || user?.public_uuid || '';
 
   const { data, loading, error } = useQuery(GET_USER_PROFILE, {
-    variables: { publicUuid: user?.public_uuid || '' },
-    skip: !user?.public_uuid, // Skip query if user public_uuid is not available
+    variables: { publicUuid: profileUuid },
+    skip: !profileUuid, // Skip query if no UUID available
   });
 
   // Show loading state while checking auth or fetching data
-  if (authLoading || loading || !user) {
+  if (authLoading || loading || (!user && !uuid)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-900">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
@@ -56,21 +71,36 @@ export default function ProfilePage() {
     );
   }
 
-  // Use the query data if available, otherwise use the stored user data
-  const userData = data?.user || user;
+  // Handle not found or error
+  if (error || !data?.user) {
+    return (
+      <div className="bg-gray-900 min-h-screen text-gray-200">
+        <div className="container mx-auto py-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-red-900 text-white p-4 rounded-lg shadow mb-4">
+              <p>Error loading profile: {error?.message || 'User not found'}</p>
+              <div className="mt-4">
+                <Link href="/leaderboard" className="text-indigo-400 hover:text-indigo-300">
+                  ← Back to Leaderboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Use the query data
+  const userData = data.user;
 
   return (
-    <div className="bg-gray-900 min-h-screen text-gray-200">
-      <div className="container mx-auto py-8 px-4">
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <LoadingSpinner />
-          </div>
-        ) : error ? (
-          <div className="bg-red-900 text-white p-4 rounded-lg shadow">
-            <p>Error loading profile: {error.message}</p>
-          </div>
-        ) : (
+    <>
+      <Head>
+        <title>{userData.name ? `${userData.name}'s Profile` : 'Profile'}</title>
+      </Head>
+      <div className="bg-gray-900 min-h-screen text-gray-200">
+        <div className="container mx-auto py-8 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="bg-gray-800 rounded-lg shadow-md mb-8 w-full overflow-hidden">
               <ProfileHeader
@@ -108,20 +138,29 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <RecentClears />
-            <ClearEntries />
+            <RecentClears profileUuid={userData.public_uuid} isViewOnly={!isOwnProfile} />
+            <ClearEntries profileUuid={userData.public_uuid} isViewOnly={!isOwnProfile} />
 
             <div className="text-center mt-8">
-              <Link
-                href="/"
-                className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-              >
-                ← Back to Home
-              </Link>
+              {isOwnProfile ? (
+                <Link
+                  href="/"
+                  className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                >
+                  ← Back to Home
+                </Link>
+              ) : (
+                <Link
+                  href="/leaderboard"
+                  className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                >
+                  ← Back to Leaderboard
+                </Link>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

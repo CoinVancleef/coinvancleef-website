@@ -12,6 +12,7 @@ export const UserClearsContext = createContext({
 // Hook to access the refetch function
 export const useUserClears = () => useContext(UserClearsContext);
 
+// Query for own clears (with "me")
 export const GET_USER_CLEAR_ENTRIES = gql`
   query GetUserClearEntries {
     userClearEntries(userPublicUuid: "me") {
@@ -36,16 +37,57 @@ export const GET_USER_CLEAR_ENTRIES = gql`
   }
 `;
 
-const UserClears: React.FC = () => {
+// Query for another user's clears
+export const GET_USER_CLEAR_ENTRIES_BY_UUID = gql`
+  query GetUserClearEntries($publicUuid: String!) {
+    userClearEntries(userPublicUuid: $publicUuid) {
+      clearEntries {
+        public_uuid
+        game
+        shotType
+        achievementType
+        danmaku_points
+        isNoDeaths
+        isNoBombs
+        isNo3rdCondition
+        numberOfDeaths
+        numberOfBombs
+        videoLink
+        replayLink
+        dateAchieved
+        createdAt
+      }
+      totalCount
+    }
+  }
+`;
+
+interface UserClearsProps {
+  profileUuid?: string;
+  isViewOnly?: boolean;
+}
+
+const UserClears: React.FC<UserClearsProps> = ({ profileUuid, isViewOnly = false }) => {
   const [entryToEdit, setEntryToEdit] = useState<ClearEntry | undefined>(undefined);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { data, loading, error, refetch } = useQuery(GET_USER_CLEAR_ENTRIES, {
-    fetchPolicy: 'network-only', // Don't use cache, always make a network request
-    notifyOnNetworkStatusChange: true, // This will trigger loading state on refetch
-  });
+  // Determine which query to use based on if we're viewing another user
+  const usePersonalQuery = !profileUuid || profileUuid === 'me';
+
+  // Use appropriate query based on whether we're viewing own profile or another user's
+  const { data, loading, error, refetch } = usePersonalQuery
+    ? useQuery(GET_USER_CLEAR_ENTRIES, {
+        fetchPolicy: 'network-only',
+        notifyOnNetworkStatusChange: true,
+      })
+    : useQuery(GET_USER_CLEAR_ENTRIES_BY_UUID, {
+        variables: { publicUuid: profileUuid },
+        fetchPolicy: 'network-only',
+        notifyOnNetworkStatusChange: true,
+      });
 
   const handleEditClick = (entry: ClearEntry) => {
+    if (isViewOnly) return;
     setEntryToEdit(entry);
     setIsEditModalOpen(true);
   };
@@ -101,14 +143,23 @@ const UserClears: React.FC = () => {
     );
   }
 
-  const clearEntries = data?.userClearEntries?.clearEntries || [];
+  // Extract clear entries from the appropriate data structure
+  const clearEntries = usePersonalQuery
+    ? data?.userClearEntries?.clearEntries || []
+    : data?.userClearEntries?.clearEntries || [];
 
   if (clearEntries.length === 0) {
     return (
       <UserClearsContext.Provider value={clearsContextValue}>
         <div className="text-center py-8 text-gray-400">
-          <p>You haven't submitted any clears yet</p>
-          <p className="mt-2">Add your first clear by clicking the "Add New Clear" button</p>
+          {isViewOnly ? (
+            <p>This player hasn't submitted any clears yet</p>
+          ) : (
+            <>
+              <p>You haven't submitted any clears yet</p>
+              <p className="mt-2">Add your first clear by clicking the "Add New Clear" button</p>
+            </>
+          )}
         </div>
       </UserClearsContext.Provider>
     );
@@ -119,10 +170,10 @@ const UserClears: React.FC = () => {
       <ClearsTable
         clearEntries={clearEntries as ClearEntry[]}
         showIndex={true}
-        isOwnProfile={true}
-        onEdit={handleEditClick}
+        isOwnProfile={!isViewOnly}
+        onEdit={isViewOnly ? undefined : handleEditClick}
       />
-      {isEditModalOpen && (
+      {isEditModalOpen && !isViewOnly && (
         <ClearEntryModal
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}

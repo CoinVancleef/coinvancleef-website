@@ -1,11 +1,41 @@
 import React from 'react';
-import { useQuery } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import ClearsTable, { ClearEntry } from './ClearsTable';
-import { GET_USER_CLEAR_ENTRIES } from './UserClears';
 import LoadingSpinner from '../LoadingSpinner';
 
-const RecentClears: React.FC = () => {
-  const { data, loading, error } = useQuery(GET_USER_CLEAR_ENTRIES, {
+// Query to get user's recent clears by UUID
+const GET_USER_CLEAR_ENTRIES_BY_UUID = gql`
+  query GetUserClearEntries($publicUuid: String!) {
+    userClearEntries(userPublicUuid: $publicUuid) {
+      clearEntries {
+        public_uuid
+        game
+        shotType
+        achievementType
+        danmaku_points
+        isNoDeaths
+        isNoBombs
+        isNo3rdCondition
+        numberOfDeaths
+        numberOfBombs
+        videoLink
+        replayLink
+        dateAchieved
+        createdAt
+      }
+      totalCount
+    }
+  }
+`;
+
+interface RecentClearsProps {
+  profileUuid?: string;
+  isViewOnly?: boolean;
+}
+
+const RecentClears: React.FC<RecentClearsProps> = ({ profileUuid, isViewOnly = false }) => {
+  const { data, loading, error } = useQuery(GET_USER_CLEAR_ENTRIES_BY_UUID, {
+    variables: { publicUuid: profileUuid || 'me' },
     fetchPolicy: 'cache-first',
   });
 
@@ -32,6 +62,7 @@ const RecentClears: React.FC = () => {
                 .slice(0, 5) as ClearEntry[]
             }
             showIndex={false}
+            isOwnProfile={!isViewOnly}
           />
         </div>
       ) : (
