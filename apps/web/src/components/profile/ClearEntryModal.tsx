@@ -8,6 +8,7 @@ import DifficultySelector from './form/DifficultySelector';
 import ConditionsCheckboxes from './form/ConditionsCheckboxes';
 import CountInputs from './form/CountInputs';
 import LinkInputs from './form/LinkInputs';
+import FormActions from './form/FormActions';
 import { ClearEntry } from './ClearsTable';
 import {
   ADD_CLEAR_ENTRY,
@@ -166,9 +167,19 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose, entr
       newErrors.numberOfDeaths = 'Cannot have deaths with No Deaths selected';
     }
 
+    // Check max limit for deaths (50)
+    if (numberOfDeaths && parseInt(numberOfDeaths, 10) > 50) {
+      newErrors.numberOfDeaths = 'Cannot have more than 50 deaths';
+    }
+
     // Check logic for bombs and no-bombs
     if (isNoBombs && numberOfBombs && parseInt(numberOfBombs, 10) > 0) {
       newErrors.numberOfBombs = 'Cannot have bombs with No Bombs selected';
+    }
+
+    // Check max limit for bombs (99)
+    if (numberOfBombs && parseInt(numberOfBombs, 10) > 99) {
+      newErrors.numberOfBombs = 'Cannot have more than 99 bombs';
     }
 
     // At least one of videoLink or replayLink must be provided
@@ -383,31 +394,35 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose, entr
             />
 
             <div className="flex justify-between items-center pt-4">
-              {isEditMode && (
-                <button
-                  type="button"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md shadow transition-colors"
-                >
-                  Delete Entry
-                </button>
+              {isEditMode ? (
+                <>
+                  <div className="flex space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md shadow transition-colors"
+                    >
+                      Delete Entry
+                    </button>
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md shadow transition-colors"
+                      onClick={onClose}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow transition-colors disabled:opacity-50"
+                    disabled={updateLoading}
+                  >
+                    {updateLoading ? 'Updating...' : 'Update'}
+                  </button>
+                </>
+              ) : (
+                <FormActions onCancel={onClose} loading={createLoading} isEditMode={false} />
               )}
-              <div className={`flex space-x-4 ${isEditMode ? 'ml-auto' : 'w-full justify-end'}`}>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md shadow transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createLoading || updateLoading}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow transition-colors"
-                >
-                  {createLoading || updateLoading ? 'Saving...' : isEditMode ? 'Update' : 'Save'}
-                </button>
-              </div>
             </div>
           </form>
         </div>

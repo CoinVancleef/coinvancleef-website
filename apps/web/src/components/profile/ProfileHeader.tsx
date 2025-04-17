@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface ProfileHeaderProps {
   name: string | null | undefined;
@@ -8,6 +9,7 @@ interface ProfileHeaderProps {
   lnb?: number;
   l1cc?: number;
   globalRank?: number;
+  isOwnProfile?: boolean;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -18,9 +20,27 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   lnb = 0,
   l1cc = 0,
   globalRank,
+  isOwnProfile = false,
 }) => {
   return (
-    <div className="w-full bg-gradient-to-r from-indigo-800/90 to-purple-800/90 p-8 mb-6 rounded-t-lg">
+    <div className="w-full bg-gradient-to-r from-indigo-800/90 to-purple-800/90 p-8 mb-6 rounded-t-lg relative">
+      {isOwnProfile && (
+        <div className="absolute top-4 right-4">
+          <Link href="/profile/edit">
+            <button className="p-1.5 bg-indigo-700 hover:bg-indigo-600 rounded-full text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-4 h-4"
+              >
+                <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
+              </svg>
+            </button>
+          </Link>
+        </div>
+      )}
+
       <div className="flex flex-col items-center w-full">
         <h1 className="text-3xl font-bold text-center text-white mb-4">{name}</h1>
 

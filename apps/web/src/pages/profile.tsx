@@ -111,6 +111,7 @@ export default function ProfilePage() {
                 lnb={userData.lnb}
                 l1cc={userData.l1cc}
                 globalRank={userData.globalRank}
+                isOwnProfile={isOwnProfile}
               />
 
               <div className="p-6 mb-6">

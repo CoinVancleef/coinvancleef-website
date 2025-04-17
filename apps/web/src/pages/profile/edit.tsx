@@ -97,7 +97,6 @@ export default function EditProfilePage() {
       const { data } = await updateProfile({
         variables: {
           data: {
-            name,
             twitterHandle: twitterHandle || null,
             youtubeChannel: youtubeChannel || null,
             twitchChannel: twitchChannel || null,
@@ -112,11 +111,7 @@ export default function EditProfilePage() {
         let generalError = '';
 
         data.updateProfile.errors.forEach((err: any) => {
-          if (
-            ['name', 'twitterHandle', 'youtubeChannel', 'twitchChannel', 'discord'].includes(
-              err.field,
-            )
-          ) {
+          if (['twitterHandle', 'youtubeChannel', 'twitchChannel', 'discord'].includes(err.field)) {
             newFieldErrors[err.field] = err.message;
           } else {
             generalError += (generalError ? ', ' : '') + err.message;
@@ -156,13 +151,13 @@ export default function EditProfilePage() {
   return (
     <>
       <Head>
-        <title>Edit Profile</title>
+        <title>Social Links</title>
       </Head>
       <main className="min-h-screen bg-gray-900 py-10 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mb-8">
             <div className="bg-gradient-to-r from-indigo-800 to-purple-700 px-6 py-6">
-              <h1 className="text-2xl font-bold text-white">Edit Profile</h1>
+              <h1 className="text-2xl font-bold text-white">Social Links</h1>
             </div>
 
             <div className="p-6">
@@ -181,27 +176,6 @@ export default function EditProfilePage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300">
-                    Name
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
-                        fieldErrors.name ? 'border-red-500' : ''
-                      }`}
-                    />
-                    {fieldErrors.name && (
-                      <p className="mt-1 text-sm text-red-400">{fieldErrors.name}</p>
-                    )}
-                  </div>
-                </div>
-
                 <div className="space-y-4">
                   <h2 className="text-lg font-medium text-gray-200">Social Media</h2>
                   <p className="text-sm text-gray-400">
