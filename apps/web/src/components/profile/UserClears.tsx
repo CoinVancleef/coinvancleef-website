@@ -111,9 +111,7 @@ const UserClears: React.FC<UserClearsProps> = ({
   };
 
   React.useEffect(() => {
-    console.log('UserClears component mounted or data changed');
     if (data) {
-      console.log('Current data:', data.userClearEntries?.clearEntries?.length, 'entries');
     }
   }, [data]);
 
@@ -125,7 +123,6 @@ const UserClears: React.FC<UserClearsProps> = ({
   // Create a value for the context
   const clearsContextValue = {
     refetchClears: async (): Promise<any> => {
-      console.log('refetchClears called');
       try {
         const result = await refetch();
         console.log(

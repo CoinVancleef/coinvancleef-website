@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import ProfileIconSelector from '../../components/profile/ProfileIconSelector';
+import { ProfileIcon, PROFILE_ICON_URLS, PROFILE_ICON_NAMES } from '../../touhou-types';
 
 // Query to get current user data
 const GET_USER_PROFILE = gql`
@@ -19,6 +21,7 @@ const GET_USER_PROFILE = gql`
       youtubeChannel
       twitchChannel
       discord
+      profilePicture
       createdAt
     }
   }
@@ -30,11 +33,11 @@ const UPDATE_PROFILE = gql`
     updateProfile(data: $data) {
       user {
         public_uuid
-        name
         twitterHandle
         youtubeChannel
         twitchChannel
         discord
+        profilePicture
       }
       errors {
         field
@@ -49,11 +52,11 @@ export default function EditProfilePage() {
   const { user: authUser, loading: authLoading, isAuthenticated } = useAuth();
 
   // Form state
-  const [name, setName] = useState('');
   const [twitterHandle, setTwitterHandle] = useState('');
   const [youtubeChannel, setYoutubeChannel] = useState('');
   const [twitchChannel, setTwitchChannel] = useState('');
   const [discord, setDiscord] = useState('');
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   // UI state
   const [errorMessage, setErrorMessage] = useState('');
@@ -74,11 +77,11 @@ export default function EditProfilePage() {
     onCompleted: data => {
       if (data?.user) {
         // Initialize form with current user data
-        setName(data.user.name || '');
         setTwitterHandle(data.user.twitterHandle || '');
         setYoutubeChannel(data.user.youtubeChannel || '');
         setTwitchChannel(data.user.twitchChannel || '');
         setDiscord(data.user.discord || '');
+        setProfilePicture(data.user.profilePicture || null);
       }
     },
   });
@@ -101,6 +104,7 @@ export default function EditProfilePage() {
             youtubeChannel: youtubeChannel || null,
             twitchChannel: twitchChannel || null,
             discord: discord || null,
+            profilePicture: profilePicture || null,
           },
         },
       });
@@ -111,7 +115,15 @@ export default function EditProfilePage() {
         let generalError = '';
 
         data.updateProfile.errors.forEach((err: any) => {
-          if (['twitterHandle', 'youtubeChannel', 'twitchChannel', 'discord'].includes(err.field)) {
+          if (
+            [
+              'twitterHandle',
+              'youtubeChannel',
+              'twitchChannel',
+              'discord',
+              'profilePicture',
+            ].includes(err.field)
+          ) {
             newFieldErrors[err.field] = err.message;
           } else {
             generalError += (generalError ? ', ' : '') + err.message;
@@ -151,13 +163,13 @@ export default function EditProfilePage() {
   return (
     <>
       <Head>
-        <title>Social Links</title>
+        <title>Edit Profile</title>
       </Head>
       <main className="min-h-screen bg-gray-900 py-10 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden mb-8">
             <div className="bg-gradient-to-r from-indigo-800 to-purple-700 px-6 py-6">
-              <h1 className="text-2xl font-bold text-white">Social Links</h1>
+              <h1 className="text-2xl font-bold text-white">Edit Profile</h1>
             </div>
 
             <div className="p-6">
@@ -176,6 +188,43 @@ export default function EditProfilePage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <h2 className="text-lg font-medium text-gray-200">Profile Picture</h2>
+
+                  <div className="flex flex-col md:flex-row md:items-start gap-6">
+                    {/* Profile Picture Preview */}
+                    <div className="flex justify-center">
+                      {profilePicture ? (
+                        <div className="w-32 h-32 border-2 border-indigo-500 p-1 bg-gray-700 rounded-md">
+                          <img
+                            src={PROFILE_ICON_URLS[profilePicture as ProfileIcon]}
+                            alt={PROFILE_ICON_NAMES[profilePicture as ProfileIcon]}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-32 h-32 border-2 border-gray-600 rounded-md flex items-center justify-center bg-gray-700">
+                          <svg
+                            className="h-16 w-16 text-gray-500"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Icon Selector */}
+                    <div className="flex-1">
+                      <ProfileIconSelector
+                        selectedIcon={profilePicture}
+                        onSelectIcon={icon => setProfilePicture(icon)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <h2 className="text-lg font-medium text-gray-200">Social Media</h2>
                   <p className="text-sm text-gray-400">

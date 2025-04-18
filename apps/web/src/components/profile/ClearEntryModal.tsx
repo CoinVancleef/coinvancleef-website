@@ -99,7 +99,6 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose, entr
 
   function handleMutationComplete(data: any) {
     const result = isEditMode ? data?.updateClearEntry : data?.createClearEntry;
-    console.log('Mutation result:', result);
 
     if (result?.errors && result.errors.length > 0) {
       // Display errors to the user
@@ -110,8 +109,6 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose, entr
       setErrors(serverErrors);
       console.error('Server validation errors:', serverErrors);
     } else if (result?.clearEntry) {
-      console.log('Entry saved successfully:', result.clearEntry);
-
       try {
         // Refresh data by refetching relevant queries
         apolloClient
@@ -119,7 +116,6 @@ const ClearEntryModal: React.FC<ClearEntryModalProps> = ({ isOpen, onClose, entr
             include: ['GetUserClearEntries', 'GetUserProfile'],
           })
           .then(() => {
-            console.log('Data refreshed successfully');
             onClose();
           })
           .catch(err => {

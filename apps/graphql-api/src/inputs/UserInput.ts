@@ -59,4 +59,7 @@ export class UpdateProfileInput {
 
   @Field({ nullable: true })
   discord?: string;
+
+  @Field({ nullable: true })
+  profilePicture?: string;
 }

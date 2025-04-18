@@ -1,12 +1,25 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/router';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient, gql } from '@apollo/client';
+
+const GET_USER_PROFILE = gql`
+  query GetUserProfile($publicUuid: String!) {
+    user(publicUuid: $publicUuid) {
+      public_uuid
+      email
+      name
+      role
+      profilePicture
+    }
+  }
+`;
 
 interface User {
   public_uuid: string;
   email: string;
   name?: string;
   role: string;
+  profilePicture?: string | null;
 }
 
 interface AuthContextType {
@@ -42,6 +55,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const router = useRouter();
   const client = useApolloClient();
 
+  // Function to fetch full user data if needed
+  const fetchUserData = async (publicUuid: string) => {
+    try {
+      const { data } = await client.query({
+        query: GET_USER_PROFILE,
+        variables: { publicUuid },
+        fetchPolicy: 'network-only',
+      });
+
+      if (data?.user) {
+        // Update user state with complete data
+        setUser(data.user);
+
+        // Update localStorage with complete user data
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+    } catch (error) {
+      // Silent error handling
+    }
+  };
+
   // Initialize auth state from localStorage on component mount (client-side only)
   useEffect(() => {
     const loadAuthState = async () => {
@@ -55,11 +89,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const parsedUser = JSON.parse(storedUser);
               setUser(parsedUser);
 
-              // Ensure token is valid by setting headers for future requests
-              // No need to reset Apollo - the auth link will handle the token
-              console.log('Auth restored for user:', parsedUser.email);
+              // If profile picture is missing, fetch complete user data
+              if (!parsedUser.profilePicture) {
+                fetchUserData(parsedUser.public_uuid);
+              }
             } catch (parseError) {
-              console.error('Error parsing stored user:', parseError);
               // Invalid data - clear it
               localStorage.removeItem('token');
               localStorage.removeItem('user');
@@ -67,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error('Error restoring auth state:', error);
+        // Silent error handling
       } finally {
         setLoading(false);
       }
@@ -84,9 +118,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
       }
       setUser(userData);
-      console.log('User logged in:', userData.email);
+
+      // Check if profile picture is missing and fetch complete data if needed
+      if (!userData.profilePicture) {
+        fetchUserData(userData.public_uuid);
+      }
     } catch (error) {
-      console.error('Error during login:', error);
+      // Silent error handling
     }
   };
 
@@ -100,14 +138,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
 
       // Clear Apollo cache to remove any authenticated data
-      client.resetStore().catch(err => {
-        console.error('Error resetting Apollo store during logout:', err);
+      client.resetStore().catch(() => {
+        // Silent error handling
       });
 
       // Redirect to login page
       router.push('/login');
     } catch (error) {
-      console.error('Error during logout:', error);
       // Force redirect to login in case of errors
       window.location.href = '/login';
     }

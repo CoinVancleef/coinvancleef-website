@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import Link from 'next/link';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ProfilePlaceholderIcon from '../components/icons/ProfilePlaceholderIcon';
+import { PROFILE_ICON_URLS, ProfileIcon } from '../touhou-types';
 
 const GET_LEADERBOARD = gql`
   query GetLeaderboard {
@@ -14,6 +16,7 @@ const GET_LEADERBOARD = gql`
       lnb
       l1cc
       globalRank
+      profilePicture
     }
   }
 `;
@@ -115,10 +118,25 @@ export default function LeaderboardPage() {
                       >
                         <td className="px-3 py-2 text-gray-400 font-medium">{actualRank}</td>
                         <td className="px-3 py-2">
-                          <div className="font-medium text-gray-300 hover:text-gray-100 truncate">
-                            <Link href={`/profile/${user.public_uuid}`}>
-                              {user.name || 'Anonymous Player'}
-                            </Link>
+                          <div className="flex items-center">
+                            <div className="h-8 w-8 flex-shrink-0 mr-3 bg-gray-700 rounded-md overflow-hidden border border-gray-600">
+                              {user.profilePicture ? (
+                                <img
+                                  src={PROFILE_ICON_URLS[user.profilePicture as ProfileIcon]}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-gray-500">
+                                  <ProfilePlaceholderIcon />
+                                </div>
+                              )}
+                            </div>
+                            <div className="font-medium text-gray-300 hover:text-gray-100 truncate">
+                              <Link href={`/profile/${user.public_uuid}`}>
+                                {user.name || 'Anonymous Player'}
+                              </Link>
+                            </div>
                           </div>
                         </td>
                         <td className="px-3 py-2 text-gray-400 text-right">

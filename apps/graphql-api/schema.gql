@@ -132,6 +132,7 @@ input UpdateProfileInput {
   discord: String
   email: String
   name: String
+  profilePicture: String
   twitchChannel: String
   twitterHandle: String
   youtubeChannel: String

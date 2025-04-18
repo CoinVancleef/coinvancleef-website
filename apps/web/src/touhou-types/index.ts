@@ -4,3 +4,4 @@ export * from './shotTypeEnums';
 export * from './interfaces';
 export * from './models';
 export * from './danmakuPointsData';
+export * from './profileIcons';

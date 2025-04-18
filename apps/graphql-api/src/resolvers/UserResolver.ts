@@ -170,6 +170,8 @@ export class UserResolver {
           twitchChannel:
             data.twitchChannel !== undefined ? data.twitchChannel : ctx.user.twitchChannel,
           discord: data.discord !== undefined ? data.discord : ctx.user.discord,
+          profilePicture:
+            data.profilePicture !== undefined ? data.profilePicture : ctx.user.profilePicture,
         },
       });
 

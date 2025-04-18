@@ -1,106 +1,110 @@
 import React from 'react';
 import Link from 'next/link';
+import { PROFILE_ICON_URLS, ProfileIcon } from '../../touhou-types';
 
 interface ProfileHeaderProps {
-  name: string | null | undefined;
+  name?: string | null;
   danmakuPoints: number;
-  totalClears?: number;
-  lnn?: number;
-  lnb?: number;
-  l1cc?: number;
-  globalRank?: number;
-  isOwnProfile?: boolean;
+  totalClears: number;
+  lnn: number;
+  lnb: number;
+  l1cc: number;
+  globalRank?: number | null;
+  isOwnProfile: boolean;
+  profilePicture?: string | null;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   name,
   danmakuPoints,
-  totalClears = 0,
-  lnn = 0,
-  lnb = 0,
-  l1cc = 0,
+  totalClears,
+  lnn,
+  lnb,
+  l1cc,
   globalRank,
-  isOwnProfile = false,
+  isOwnProfile,
+  profilePicture,
 }) => {
   return (
-    <div className="w-full bg-gradient-to-r from-indigo-800/90 to-purple-800/90 p-8 mb-6 rounded-t-lg relative">
-      {isOwnProfile && (
-        <div className="absolute top-4 right-4">
-          <Link href="/profile/edit">
-            <button className="p-1.5 bg-indigo-700 hover:bg-indigo-600 rounded-full text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-4 h-4"
-              >
-                <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
-              </svg>
-            </button>
-          </Link>
-        </div>
-      )}
-
-      <div className="flex flex-col items-center w-full">
-        <h1 className="text-3xl font-bold text-center text-white mb-4">{name}</h1>
-
-        {globalRank && (
-          <div className="mb-6 inline-flex items-center px-5 py-2 bg-black/30 backdrop-blur-sm rounded-full">
-            <span className="text-gray-200 font-medium">
-              Global Rank <span className="text-white font-bold ml-1 text-lg">#{globalRank}</span>
-            </span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mt-2 w-full">
-          {/* Danmaku Points */}
-          <div className="md:col-span-4 bg-gradient-to-br from-indigo-900/80 to-indigo-950/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-indigo-700/40">
-            <div className="px-4 py-3 bg-black/20 border-b border-indigo-700/30">
-              <h3 className="text-sm font-medium text-indigo-100 uppercase tracking-wider">
-                Danmaku Points
-              </h3>
-            </div>
-            <div className="p-6 text-center">
-              <p className="text-white text-3xl font-bold">{danmakuPoints.toLocaleString()}</p>
-            </div>
-          </div>
-
-          {/* Total Clears */}
-          <div className="md:col-span-4 bg-gradient-to-br from-indigo-800/80 to-indigo-900/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-indigo-700/40">
-            <div className="px-4 py-3 bg-black/20 border-b border-indigo-700/30">
-              <h3 className="text-sm font-medium text-indigo-100 uppercase tracking-wider">
-                Total Clears
-              </h3>
-            </div>
-            <div className="p-6 text-center">
-              <p className="text-white text-3xl font-bold">{totalClears.toLocaleString()}</p>
-            </div>
-          </div>
-
-          {/* Achievements Section */}
-          <div className="md:col-span-4 bg-gradient-to-br from-purple-800/80 to-purple-900/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-indigo-700/40">
-            <div className="px-4 py-3 bg-black/20 border-b border-indigo-700/30">
-              <h3 className="text-sm font-medium text-indigo-100 uppercase tracking-wider">
-                Achievements
-              </h3>
-            </div>
-            <div className="grid grid-cols-3 divide-x divide-indigo-800/30">
-              <div className="p-3 text-center">
-                <p className="text-indigo-200 text-xs uppercase font-medium mb-1">LNN</p>
-                <p className="text-white text-xl font-bold">{lnn}</p>
+    <div className="relative">
+      <div className="bg-gradient-to-r from-indigo-800 to-purple-700 py-6 px-6">
+        <div className="flex flex-wrap items-center">
+          <div className="md:mr-6 mb-4 md:mb-0 flex items-center">
+            {profilePicture ? (
+              <div className="h-20 w-20 overflow-hidden mr-4 border-2 border-indigo-500 p-1 bg-gray-800 rounded-md shadow-md">
+                <img
+                  src={PROFILE_ICON_URLS[profilePicture as ProfileIcon]}
+                  alt="Profile"
+                  className="h-full w-full object-contain"
+                />
               </div>
-              <div className="p-3 text-center">
-                <p className="text-indigo-200 text-xs uppercase font-medium mb-1">LNB</p>
-                <p className="text-white text-xl font-bold">{lnb}</p>
+            ) : (
+              <div className="h-20 w-20 overflow-hidden mr-4 border-2 border-indigo-500 bg-gray-800 flex items-center justify-center rounded-md shadow-md">
+                <svg className="h-12 w-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
               </div>
-              <div className="p-3 text-center">
-                <p className="text-indigo-200 text-xs uppercase font-medium mb-1">L1CC</p>
-                <p className="text-white text-xl font-bold">{l1cc}</p>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-white">{name || 'Anonymous Player'}</h1>
+              <p className="text-indigo-200">{globalRank ? `Rank #${globalRank}` : 'Unranked'}</p>
+            </div>
+          </div>
+          <div className="flex-grow">
+            <div className="flex flex-wrap gap-4">
+              <div className="px-5 py-3 bg-gray-800 bg-opacity-70 rounded-lg shadow-lg transition-all hover:bg-opacity-80">
+                <p className="text-sm text-indigo-200 font-medium">Danmaku Points</p>
+                <p className="text-xl font-bold text-white">{danmakuPoints}</p>
+              </div>
+              <div className="px-5 py-3 bg-gray-800 bg-opacity-70 rounded-lg shadow-lg transition-all hover:bg-opacity-80">
+                <p className="text-sm text-indigo-200 font-medium">Total Clears</p>
+                <p className="text-xl font-bold text-white">{totalClears}</p>
+              </div>
+              <div className="px-5 py-3 bg-gray-800 bg-opacity-70 rounded-lg shadow-lg transition-all hover:bg-opacity-80 flex-grow md:flex-grow-0">
+                <div className="flex gap-6 mt-1">
+                  <div className="text-center">
+                    <p className="text-xs text-indigo-300">LNN</p>
+                    <p className="text-lg font-bold text-white">{lnn}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-indigo-300">LNB</p>
+                    <p className="text-lg font-bold text-white">{lnb}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-indigo-300">1CC</p>
+                    <p className="text-lg font-bold text-white">{l1cc}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {isOwnProfile && (
+        <div className="absolute top-4 right-4">
+          <Link
+            href="/profile/edit"
+            className="inline-flex items-center px-3 py-1 border border-transparent text-sm rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+          >
+            <svg
+              className="h-4 w-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+              ></path>
+            </svg>
+            Edit
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

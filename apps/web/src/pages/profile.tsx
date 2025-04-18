@@ -28,6 +28,7 @@ const GET_USER_PROFILE = gql`
       youtubeChannel
       twitchChannel
       discord
+      profilePicture
       createdAt
     }
   }
@@ -113,31 +114,45 @@ export default function ProfilePage() {
                 l1cc={userData.l1cc}
                 globalRank={userData.globalRank}
                 isOwnProfile={isOwnProfile}
+                profilePicture={userData.profilePicture}
               />
 
-              <div className="p-6 mb-6">
-                <h2 className="text-xl font-bold mb-4 text-gray-100 border-b border-gray-700 pb-2">
-                  Social Links
-                </h2>
-                <SocialLinks
-                  discordTag={userData.discord}
-                  twitterUrl={
-                    userData.twitterHandle
-                      ? `https://twitter.com/${userData.twitterHandle}`
-                      : undefined
-                  }
-                  twitchUrl={
-                    userData.twitchChannel
-                      ? `https://twitch.tv/${userData.twitchChannel}`
-                      : undefined
-                  }
-                  youtubeUrl={
-                    userData.youtubeChannel
-                      ? `https://youtube.com/${userData.youtubeChannel}`
-                      : undefined
-                  }
-                />
-              </div>
+              {!userData.discord &&
+              !userData.twitterHandle &&
+              !userData.twitchChannel &&
+              !userData.youtubeChannel ? (
+                isOwnProfile ? (
+                  <div className="text-center p-6">
+                    <Link href="/profile/edit" className="text-indigo-400 hover:text-indigo-300">
+                      Add your social links
+                    </Link>
+                  </div>
+                ) : null
+              ) : (
+                <div className="p-6 mb-6">
+                  <h2 className="text-xl font-bold mb-4 text-gray-100 border-b border-gray-700 pb-2">
+                    Social Links
+                  </h2>
+                  <SocialLinks
+                    discordTag={userData.discord}
+                    twitterUrl={
+                      userData.twitterHandle
+                        ? `https://twitter.com/${userData.twitterHandle}`
+                        : undefined
+                    }
+                    twitchUrl={
+                      userData.twitchChannel
+                        ? `https://twitch.tv/${userData.twitchChannel}`
+                        : undefined
+                    }
+                    youtubeUrl={
+                      userData.youtubeChannel
+                        ? `https://youtube.com/${userData.youtubeChannel}`
+                        : undefined
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             <RecentClears profileUuid={userData.public_uuid} isViewOnly={!isOwnProfile} />

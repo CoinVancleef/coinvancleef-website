@@ -15,6 +15,7 @@ const LOGIN_MUTATION = gql`
         email
         name
         role
+        profilePicture
       }
       token
       errors {

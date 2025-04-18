@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
+import ProfilePlaceholderIcon from './icons/ProfilePlaceholderIcon';
+import { PROFILE_ICON_URLS, ProfileIcon } from '../touhou-types';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, logout, user } = useAuth();
@@ -54,9 +56,30 @@ const Navbar: React.FC = () => {
                   <div className="flex space-x-3">
                     <Link
                       href="/profile"
-                      className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+                      className="relative group"
+                      title={user?.name || 'Your Profile'}
                     >
-                      My Profile
+                      <div className="h-10 w-10 rounded-md overflow-hidden border-2 border-gray-700 group-hover:border-indigo-500 transition-colors bg-gray-800 flex items-center justify-center">
+                        {user?.profilePicture ? (
+                          <img
+                            src={PROFILE_ICON_URLS[user.profilePicture as ProfileIcon]}
+                            alt="Profile"
+                            className="h-full w-full object-contain"
+                            onError={e => {
+                              e.currentTarget.style.display = 'none';
+                              // Show the placeholder if image fails to load
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                const placeholder = document.createElement('div');
+                                placeholder.innerHTML = `<svg class="h-6 w-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>`;
+                                parent.appendChild(placeholder.firstChild!);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <ProfilePlaceholderIcon className="h-6 w-6 text-gray-400" />
+                        )}
+                      </div>
                     </Link>
                     <button
                       className="bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-600 flex items-center"

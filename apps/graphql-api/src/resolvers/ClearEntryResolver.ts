@@ -299,8 +299,6 @@ export class ClearEntryResolver {
       }
 
       // Log IDs for debugging
-      console.log('Entry user ID:', existingEntry.userId.toString(), typeof existingEntry.userId);
-      console.log('Context user ID:', ctx.user.id, typeof ctx.user.id);
 
       // Fix the ID comparison by converting both to strings and trimming any 'n' suffix
       const entryUserId = existingEntry.userId.toString().replace('n', '');
