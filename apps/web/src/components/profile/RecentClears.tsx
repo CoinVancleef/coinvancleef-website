@@ -1,32 +1,8 @@
 import React from 'react';
-import { gql, useQuery } from '@apollo/client';
 import ClearsTable, { ClearEntry } from './ClearsTable';
 import LoadingSpinner from '../LoadingSpinner';
-
-// Query to get user's recent clears by UUID
-const GET_USER_CLEAR_ENTRIES_BY_UUID = gql`
-  query GetUserClearEntries($publicUuid: String!) {
-    userClearEntries(userPublicUuid: $publicUuid) {
-      clearEntries {
-        public_uuid
-        game
-        shotType
-        achievementType
-        danmaku_points
-        isNoDeaths
-        isNoBombs
-        isNo3rdCondition
-        numberOfDeaths
-        numberOfBombs
-        videoLink
-        replayLink
-        dateAchieved
-        createdAt
-      }
-      totalCount
-    }
-  }
-`;
+import { useUserClears, UserClearsContext, GET_USER_CLEAR_ENTRIES_BY_UUID } from './UserClears';
+import { useQuery } from '@apollo/client';
 
 interface RecentClearsProps {
   profileUuid?: string;
@@ -34,10 +10,29 @@ interface RecentClearsProps {
 }
 
 const RecentClears: React.FC<RecentClearsProps> = ({ profileUuid, isViewOnly = false }) => {
+  // Use the context if available, otherwise make a query
+  const context = useUserClears();
+  const hasContextData = context.clearEntries && context.clearEntries.length > 0;
+
+  // If we don't have data from context, we need to make our own query
   const { data, loading, error } = useQuery(GET_USER_CLEAR_ENTRIES_BY_UUID, {
     variables: { publicUuid: profileUuid || 'me' },
     fetchPolicy: 'cache-first',
+    skip: hasContextData, // Skip query if we have data from context
   });
+
+  // Get clear entries either from context or from our own query
+  const clearEntries = hasContextData
+    ? context.clearEntries
+    : (data?.userClearEntries?.clearEntries as ClearEntry[]) || [];
+
+  // Sort by creation date and take the most recent 5
+  const recentEntries = [...clearEntries]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  const isLoading = !hasContextData && loading;
+  const isError = !hasContextData && error;
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
@@ -45,25 +40,17 @@ const RecentClears: React.FC<RecentClearsProps> = ({ profileUuid, isViewOnly = f
         Recent Clears
       </h2>
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center items-center py-10">
           <LoadingSpinner />
         </div>
-      ) : error ? (
+      ) : isError ? (
         <div className="bg-red-900 text-white p-4 rounded-lg shadow mb-4">
-          <p>Error loading clears: {error.message}</p>
+          <p>Error loading clears: {error?.message}</p>
         </div>
-      ) : data?.userClearEntries?.clearEntries.length > 0 ? (
+      ) : recentEntries.length > 0 ? (
         <div className="overflow-x-auto">
-          <ClearsTable
-            clearEntries={
-              [...data.userClearEntries.clearEntries]
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .slice(0, 5) as ClearEntry[]
-            }
-            showIndex={false}
-            isOwnProfile={!isViewOnly}
-          />
+          <ClearsTable clearEntries={recentEntries} showIndex={false} isOwnProfile={!isViewOnly} />
         </div>
       ) : (
         <p className="text-gray-400">No clears submitted yet.</p>

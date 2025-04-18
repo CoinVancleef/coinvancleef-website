@@ -51,9 +51,18 @@ export class DanmakuPointsCalculator {
       return 0;
     }
 
+    // Check if the game is PoFV (TH09) which has no bombs
+    const isPoFV = input.game === TouhouGame.TH09;
+
     // Ensure boolean flags have explicit boolean values (not undefined)
     const noDeaths = input.isNoDeaths === true;
-    const noBombs = input.isNoBombs === true;
+
+    // For PoFV, if it's a No Miss run, automatically count it as No Bombs as well
+    let noBombs = input.isNoBombs === true;
+    if (isPoFV && noDeaths) {
+      noBombs = true;
+    }
+
     const no3rdCondition = input.isNo3rdCondition === true;
 
     // For low miss runs (1-3 deaths), apply special calculation

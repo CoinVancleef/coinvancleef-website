@@ -10,9 +10,14 @@ interface ClearEntriesProps {
 
 const ClearEntries: React.FC<ClearEntriesProps> = ({ profileUuid, isViewOnly = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(10);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+
+  const loadMore = () => {
+    setDisplayLimit(prevLimit => prevLimit + 10);
+  };
 
   return (
     <div className="bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 mb-8 border border-gray-700 overflow-hidden">
@@ -29,7 +34,12 @@ const ClearEntries: React.FC<ClearEntriesProps> = ({ profileUuid, isViewOnly = f
       </div>
 
       <div className="overflow-x-auto -mx-6 md:-mx-8 px-6 md:px-8">
-        <UserClears profileUuid={profileUuid} isViewOnly={isViewOnly} />
+        <UserClears
+          profileUuid={profileUuid}
+          isViewOnly={isViewOnly}
+          limit={displayLimit}
+          onLoadMore={loadMore}
+        />
       </div>
 
       {isModalOpen && <ClearEntryModal isOpen={isModalOpen} onClose={closeModal} />}

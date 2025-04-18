@@ -1,25 +1,28 @@
 import React, { createContext, useContext, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import ClearsTable, { ClearEntry } from './ClearsTable';
+import GameClears from './GameClears';
 import LoadingSpinner from '../LoadingSpinner';
 import ClearEntryModal from './ClearEntryModal';
 
 // Create a context for refetching user clears
 export const UserClearsContext = createContext({
   refetchClears: (): Promise<any> => Promise.resolve(),
+  clearEntries: [] as ClearEntry[],
 });
 
-// Hook to access the refetch function
+// Hook to access the refetch function and clear entries
 export const useUserClears = () => useContext(UserClearsContext);
 
-// Query for own clears (with "me")
+// Query to get user's clear entries with all needed fields
 export const GET_USER_CLEAR_ENTRIES = gql`
   query GetUserClearEntries {
-    userClearEntries(userPublicUuid: "me") {
+    userClearEntries {
       clearEntries {
         public_uuid
         game
         shotType
+        difficulty
         achievementType
         danmaku_points
         isNoDeaths
@@ -37,7 +40,7 @@ export const GET_USER_CLEAR_ENTRIES = gql`
   }
 `;
 
-// Query for another user's clears
+// Query to get user's clear entries by UUID with all needed fields
 export const GET_USER_CLEAR_ENTRIES_BY_UUID = gql`
   query GetUserClearEntries($publicUuid: String!) {
     userClearEntries(userPublicUuid: $publicUuid) {
@@ -45,6 +48,7 @@ export const GET_USER_CLEAR_ENTRIES_BY_UUID = gql`
         public_uuid
         game
         shotType
+        difficulty
         achievementType
         danmaku_points
         isNoDeaths
@@ -65,9 +69,18 @@ export const GET_USER_CLEAR_ENTRIES_BY_UUID = gql`
 interface UserClearsProps {
   profileUuid?: string;
   isViewOnly?: boolean;
+  limit?: number;
+  onLoadMore?: () => void;
+  renderAs?: 'list' | 'game-view';
 }
 
-const UserClears: React.FC<UserClearsProps> = ({ profileUuid, isViewOnly = false }) => {
+const UserClears: React.FC<UserClearsProps> = ({
+  profileUuid,
+  isViewOnly = false,
+  limit = 10,
+  onLoadMore,
+  renderAs = 'list',
+}) => {
   const [entryToEdit, setEntryToEdit] = useState<ClearEntry | undefined>(undefined);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -104,6 +117,11 @@ const UserClears: React.FC<UserClearsProps> = ({ profileUuid, isViewOnly = false
     }
   }, [data]);
 
+  // Extract clear entries from the appropriate data structure
+  const clearEntries = usePersonalQuery
+    ? data?.userClearEntries?.clearEntries || []
+    : data?.userClearEntries?.clearEntries || [];
+
   // Create a value for the context
   const clearsContextValue = {
     refetchClears: async (): Promise<any> => {
@@ -121,6 +139,7 @@ const UserClears: React.FC<UserClearsProps> = ({ profileUuid, isViewOnly = false
         throw err;
       }
     },
+    clearEntries: clearEntries as ClearEntry[],
   };
 
   if (loading) {
@@ -143,11 +162,6 @@ const UserClears: React.FC<UserClearsProps> = ({ profileUuid, isViewOnly = false
     );
   }
 
-  // Extract clear entries from the appropriate data structure
-  const clearEntries = usePersonalQuery
-    ? data?.userClearEntries?.clearEntries || []
-    : data?.userClearEntries?.clearEntries || [];
-
   if (clearEntries.length === 0) {
     return (
       <UserClearsContext.Provider value={clearsContextValue}>
@@ -165,14 +179,49 @@ const UserClears: React.FC<UserClearsProps> = ({ profileUuid, isViewOnly = false
     );
   }
 
+  // If rendering as game view, use the GameClears component
+  if (renderAs === 'game-view') {
+    return (
+      <UserClearsContext.Provider value={clearsContextValue}>
+        <GameClears clearEntries={clearEntries as ClearEntry[]} isViewOnly={isViewOnly} />
+        {isEditModalOpen && !isViewOnly && (
+          <ClearEntryModal
+            isOpen={isEditModalOpen}
+            onClose={handleCloseEditModal}
+            entryToEdit={entryToEdit}
+          />
+        )}
+      </UserClearsContext.Provider>
+    );
+  }
+
+  // Get total count of entries
+  const totalEntries = clearEntries.length;
+  // Apply limit to entries
+  const limitedEntries = clearEntries.slice(0, limit) as ClearEntry[];
+  // Check if there are more entries to load
+  const hasMoreEntries = totalEntries > limit;
+
   return (
     <UserClearsContext.Provider value={clearsContextValue}>
       <ClearsTable
-        clearEntries={clearEntries as ClearEntry[]}
+        clearEntries={limitedEntries}
         showIndex={true}
         isOwnProfile={!isViewOnly}
         onEdit={isViewOnly ? undefined : handleEditClick}
       />
+
+      {hasMoreEntries && onLoadMore && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={onLoadMore}
+            className="px-4 py-2 border border-gray-600 rounded-md text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-all duration-200"
+          >
+            Show More ({Math.min(10, totalEntries - limit)} more of {totalEntries})
+          </button>
+        </div>
+      )}
+
       {isEditModalOpen && !isViewOnly && (
         <ClearEntryModal
           isOpen={isEditModalOpen}

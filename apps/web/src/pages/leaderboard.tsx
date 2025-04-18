@@ -207,15 +207,6 @@ export default function LeaderboardPage() {
               )}
             </div>
           )}
-
-          <div className="mt-8 text-center">
-            <Link
-              href="/"
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
         </div>
       </div>
     </div>

@@ -24,6 +24,9 @@ const CountInputs: React.FC<CountInputsProps> = ({
   bombsError,
   selectedGame,
 }) => {
+  // Check if game is PoFV which doesn't have bombs
+  const isPoFV = selectedGame === TouhouGame.TH09;
+
   const getDeathCountNote = () => {
     if (!selectedGame) return null;
 
@@ -62,7 +65,9 @@ const CountInputs: React.FC<CountInputsProps> = ({
           id="numberOfDeaths"
           className={`w-full px-3 py-2 rounded bg-gray-700 border ${
             deathsError ? 'border-red-500' : 'border-gray-600'
-          } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+          } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            isNoDeaths ? 'opacity-80 cursor-not-allowed' : ''
+          }`}
           value={numberOfDeaths}
           onChange={e => setNumberOfDeaths(e.target.value)}
           min="0"
@@ -82,12 +87,14 @@ const CountInputs: React.FC<CountInputsProps> = ({
           id="numberOfBombs"
           className={`w-full px-3 py-2 rounded bg-gray-700 border ${
             bombsError ? 'border-red-500' : 'border-gray-600'
-          } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-          value={numberOfBombs}
+          } text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            isNoBombs || isPoFV ? 'opacity-80 cursor-not-allowed' : ''
+          }`}
+          value={isPoFV ? '' : numberOfBombs}
           onChange={e => setNumberOfBombs(e.target.value)}
           min="0"
           placeholder="Enter number"
-          disabled={isNoBombs}
+          disabled={isNoBombs || isPoFV}
         />
         {bombsError && <p className="mt-1 text-sm text-red-500">{bombsError}</p>}
       </div>

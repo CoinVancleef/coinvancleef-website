@@ -9,6 +9,7 @@ import ProfileHeader from '../components/profile/ProfileHeader';
 import SocialLinks from '../components/profile/SocialLinks';
 import RecentClears from '../components/profile/RecentClears';
 import ClearEntries from '../components/profile/ClearEntries';
+import GameCoverSection from '../components/profile/GameCoverSection';
 
 const GET_USER_PROFILE = gql`
   query GetUserProfile($publicUuid: String!) {
@@ -141,15 +142,11 @@ export default function ProfilePage() {
 
             <RecentClears profileUuid={userData.public_uuid} isViewOnly={!isOwnProfile} />
             <ClearEntries profileUuid={userData.public_uuid} isViewOnly={!isOwnProfile} />
+            <GameCoverSection profileUuid={userData.public_uuid} isViewOnly={!isOwnProfile} />
 
             <div className="text-center mt-8">
               {isOwnProfile ? (
-                <Link
-                  href="/"
-                  className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-                >
-                  ← Back to Home
-                </Link>
+                <></>
               ) : (
                 <Link
                   href="/leaderboard"
