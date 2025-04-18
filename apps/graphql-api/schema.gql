@@ -92,12 +92,20 @@ type Mutation {
   deleteClearEntry(publicUuid: String!): Boolean!
   login(data: LoginInput!): UserResponse!
   register(data: UserInput!): UserResponse!
+  requestPasswordReset(email: String!): PasswordResetResponse!
+  resetPassword(newPassword: String!, token: String!): PasswordResetResponse!
   updateClearEntry(data: UpdateClearEntryInput!): ClearEntryResponse!
   updateProfile(data: UpdateProfileInput!): UserResponse!
   verifyClearEntry(data: VerifyClearEntryInput!): ClearEntryResponse!
 }
 
 type PasswordChangeResponse {
+  errors: [FieldError!]
+  message: String
+  success: Boolean!
+}
+
+type PasswordResetResponse {
   errors: [FieldError!]
   message: String
   success: Boolean!

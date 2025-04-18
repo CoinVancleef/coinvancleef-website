@@ -31,6 +31,8 @@ model User {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   clearEntries   ClearEntry[]
+  description    String?
+  resetTokens    PasswordResetToken[]
 
   @@map("users")
 }
@@ -58,6 +60,17 @@ model ClearEntry {
   createdBy        User            @relation(fields: [userId], references: [id])
 
   @@map("clear_entries")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    BigInt   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("password_reset_tokens")
 }
 
 enum Role {

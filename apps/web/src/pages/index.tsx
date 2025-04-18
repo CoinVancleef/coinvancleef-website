@@ -9,13 +9,13 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Coinvancleef | Home</title>
+        <title>CoinVancleef | Home</title>
       </Head>
       <main className="min-h-screen bg-gray-50 py-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white shadow overflow-hidden sm:rounded-lg p-8">
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Coinvancleef</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to CoinVancleef</h1>
               <p className="text-lg text-gray-600 mb-8">
                 Your trusted platform for financial insights
               </p>

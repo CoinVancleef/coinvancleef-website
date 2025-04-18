@@ -5,10 +5,18 @@ import { LoginInput } from '../inputs/LoginInput';
 import { UserResponse } from '../types/UserResponse';
 import { UserModel } from '../types/UserModel';
 import { PasswordChangeResponse } from '../types/PasswordChangeResponse';
+import { PasswordResetResponse } from '../types/PasswordResetResponse';
+import { RequestPasswordResetInput, ResetPasswordInput } from '../inputs/PasswordResetInput';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { isAuth } from '../middleware/isAuth';
 import { Context } from '../types/Context';
+import {
+  generatePasswordResetToken,
+  sendPasswordResetEmail,
+  verifyPasswordResetToken,
+  deletePasswordResetToken,
+} from '../services/emailService';
 
 @Resolver()
 export class UserResolver {
@@ -300,5 +308,161 @@ export class UserResolver {
         createdAt: true,
       },
     });
+  }
+
+  @Mutation(() => PasswordResetResponse)
+  async requestPasswordReset(@Arg('email') email: string): Promise<PasswordResetResponse> {
+    try {
+      console.log(`Password reset requested for email: ${email}`);
+
+      // Find user by email
+      const user = await prisma.user.findUnique({ where: { email } });
+
+      // If no user found, still return success to prevent email enumeration
+      if (!user) {
+        console.log(`No user found with email: ${email}`);
+        return {
+          success: true,
+          message: 'If an account with that email exists, we have sent a password reset link.',
+        };
+      }
+
+      console.log(`User found: ${user.id} (${user.email})`);
+
+      // Generate and store a token for the user
+      let token;
+      try {
+        token = await generatePasswordResetToken(user.id);
+        console.log(`Token generated successfully`);
+      } catch (tokenError) {
+        console.error('Error generating reset token:', tokenError);
+        return {
+          success: false,
+          message:
+            'There was a problem generating the password reset token. Please try again later.',
+          errors: [{ field: 'unknown', message: 'Failed to generate password reset token.' }],
+        };
+      }
+
+      // Send the reset email
+      try {
+        const emailSent = await sendPasswordResetEmail(user.email, token);
+
+        if (!emailSent) {
+          // Log the issue but don't tell the user (to prevent email enumeration)
+          console.warn(`Email sending failed for: ${user.email} - Resend not initialized`);
+
+          // In development, we still want to succeed so we can test with the console link
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Development mode: Continuing with password reset despite email failure`);
+            return {
+              success: true,
+              message:
+                'If an account with that email exists, we have sent a password reset link. (Check server logs for the link)',
+            };
+          } else {
+            // In production, this is a real failure if emails don't send
+            console.error(`Production mode: Password reset failed due to email sending failure`);
+            return {
+              success: false,
+              message:
+                'There was a problem sending the password reset email. Please try again later.',
+              errors: [{ field: 'email', message: 'Failed to send password reset email.' }],
+            };
+          }
+        }
+
+        console.log(`Password reset email sent successfully to: ${user.email}`);
+      } catch (emailError) {
+        console.error('Error sending password reset email:', emailError);
+
+        // In development, we still want to succeed so we can test with the console link
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Development mode: Continuing with password reset despite email error`);
+          return {
+            success: true,
+            message:
+              'If an account with that email exists, we have sent a password reset link. (Check server logs for the link)',
+          };
+        }
+
+        return {
+          success: false,
+          message: 'There was a problem sending the password reset email. Please try again later.',
+          errors: [{ field: 'email', message: 'Failed to send password reset email.' }],
+        };
+      }
+
+      return {
+        success: true,
+        message: 'If an account with that email exists, we have sent a password reset link.',
+      };
+    } catch (error: any) {
+      console.error('Request password reset error:', error);
+
+      return {
+        success: false,
+        message: 'There was a problem processing your request. Please try again later.',
+        errors: [
+          { field: 'unknown', message: `Error: ${error.message || 'Something went wrong'}` },
+        ],
+      };
+    }
+  }
+
+  @Mutation(() => PasswordResetResponse)
+  async resetPassword(
+    @Arg('token') token: string,
+    @Arg('newPassword') newPassword: string,
+  ): Promise<PasswordResetResponse> {
+    try {
+      // Validate token
+      const userId = await verifyPasswordResetToken(token);
+
+      if (!userId) {
+        return {
+          success: false,
+          message: 'Invalid or expired password reset token.',
+          errors: [{ field: 'token', message: 'Invalid or expired password reset token.' }],
+        };
+      }
+
+      // Validate password
+      if (newPassword.length < 6) {
+        return {
+          success: false,
+          message: 'Password must be at least 6 characters long.',
+          errors: [{ field: 'password', message: 'Password must be at least 6 characters long.' }],
+        };
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update the user's password
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+      });
+
+      // Delete the token
+      await deletePasswordResetToken(token);
+
+      return {
+        success: true,
+        message:
+          'Your password has been successfully reset. You can now log in with your new password.',
+      };
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+
+      return {
+        success: false,
+        message: 'There was a problem resetting your password. Please try again later.',
+        errors: [
+          { field: 'unknown', message: `Error: ${error.message || 'Something went wrong'}` },
+        ],
+      };
+    }
   }
 }

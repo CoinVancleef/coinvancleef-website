@@ -96,7 +96,7 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>Login | Coinvancleef</title>
+        <title>Login | CoinVancleef</title>
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-900">
         <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
@@ -158,6 +158,14 @@ export default function LoginPage() {
               {fieldErrors.password && (
                 <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
               )}
+              <div className="mt-1 text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-indigo-400 hover:text-indigo-300"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <div className="pt-2">

@@ -8,17 +8,26 @@
   },
   "scripts": {
     "build": "turbo run build",
+    "build:stg": "turbo run build:stg",
+    "build:prod": "turbo run build:prod",
     "dev": "turbo run dev",
+    "dev:stg": "turbo run dev:stg",
     "dev:admin": "turbo run dev --filter=admin",
     "dev:graphql-api": "turbo run dev --filter=graphql-api",
     "dev:setup": "turbo run setup",
     "dev:migrate": "turbo run db:migrate",
+    "start": "turbo run start",
+    "start:dev": "turbo run start:dev",
+    "start:stg": "turbo run start:stg",
+    "start:prod": "turbo run start:prod",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
     "@types/node": "^18.16.3",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.3",
     "prettier": "^2.8.8",
     "turbo": "^1.9.3",
     "typescript": "^5.0.4"

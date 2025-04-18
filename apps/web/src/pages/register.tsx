@@ -110,7 +110,7 @@ export default function RegisterPage() {
   return (
     <>
       <Head>
-        <title>Sign up | Coinvancleef</title>
+        <title>Sign up | CoinVancleef</title>
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-900">
         <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
