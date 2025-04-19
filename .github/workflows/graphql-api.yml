@@ -53,9 +53,42 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Generate Prisma client
+      # Debug Prisma setup
+      - name: Debug Prisma setup
+        run: |
+          echo "Checking Prisma files and versions..."
+          ls -la packages/database/node_modules/.prisma || echo "Prisma directory doesn't exist yet"
+          ls -la packages/database/prisma
+          echo "Prisma version:"
+          pnpm --filter database exec prisma --version
+          echo "Prisma schema content:"
+          cat packages/database/prisma/schema.prisma
+
+      # Setup dummy database URL for Prisma
+      - name: Setup dummy database URL for Prisma
+        run: |
+          echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?schema=public" >> packages/database/.env
+          echo "DIRECT_URL=postgresql://test:test@localhost:5432/test?schema=public" >> packages/database/.env
+          echo "SHADOW_DATABASE_URL=postgresql://test:test@localhost:5432/test_shadow?schema=public" >> packages/database/.env
+
+      # Generate Prisma client with specific command
       - name: Generate Prisma Client
-        run: pnpm --filter database generate
+        working-directory: packages/database
+        run: npx prisma generate
+
+      # Verify the Prisma client was generated correctly
+      - name: Verify Prisma Client generation
+        run: |
+          echo "Checking for generated Prisma client..."
+          ls -la packages/database/node_modules/.prisma || echo "Prisma directory doesn't exist"
+          ls -la node_modules/.prisma/client || echo "Global Prisma client directory doesn't exist"
+          echo "Checking Prisma client index file..."
+          grep -i "UserGetPayload" node_modules/.prisma/client/index.d.ts || echo "UserGetPayload not found in index.d.ts"
+
+      # Build the database package first
+      - name: Build database package
+        working-directory: packages/database
+        run: npx tsc
 
       # Create touhou-types directory for build
       - name: Prepare types directory
@@ -66,11 +99,14 @@ jobs:
         working-directory: apps/web
         run: npx tsc -p tsconfig.types.json
 
+      # Build with verbose output for debugging
       - name: Build GraphQL API
         working-directory: apps/graphql-api
-        run: npx tsc
+        run: npx tsc --listFiles
 
+      # Run tests only if build succeeds
       - name: Run tests
+        if: success()
         working-directory: apps/graphql-api
         run: npx jest
         env:

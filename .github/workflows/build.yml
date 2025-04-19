@@ -43,9 +43,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Generate Prisma client before building
-      - name: Generate Prisma Client
-        run: pnpm --filter database generate
+      # Setup dummy database URL for Prisma
+      - name: Setup dummy database URL for Prisma
+        run: |
+          echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?schema=public" >> packages/database/.env
+          echo "DIRECT_URL=postgresql://test:test@localhost:5432/test?schema=public" >> packages/database/.env
+          echo "SHADOW_DATABASE_URL=postgresql://test:test@localhost:5432/test_shadow?schema=public" >> packages/database/.env
 
+      # Generate Prisma client specifically in the database package directory
+      - name: Generate Prisma Client
+        working-directory: packages/database
+        run: npx prisma generate
+
+      # Build database package first to ensure types are available
+      - name: Build database package
+        working-directory: packages/database
+        run: npx tsc
+
+      # Now build everything
       - name: Build all packages
         run: pnpm build
