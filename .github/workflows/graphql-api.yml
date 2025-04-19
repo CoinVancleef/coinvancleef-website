@@ -7,12 +7,14 @@ on:
       - 'apps/graphql-api/**'
       - 'apps/web/src/touhou-types/**'
       - '.github/workflows/graphql-api.yml'
+      - 'packages/database/**'
   pull_request:
     branches: [main]
     paths:
       - 'apps/graphql-api/**'
       - 'apps/web/src/touhou-types/**'
       - '.github/workflows/graphql-api.yml'
+      - 'packages/database/**'
 
 jobs:
   build-and-test:
@@ -50,6 +52,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      # Generate Prisma client
+      - name: Generate Prisma Client
+        run: pnpm --filter database generate
 
       # Create touhou-types directory for build
       - name: Prepare types directory

@@ -1,7 +1,6 @@
 import { Prisma, Role, AchievementType } from 'database';
 import { UserModel } from '../types/UserModel';
-import { PrismaClient } from 'database';
-import type { ClearEntry, User } from 'database';
+import type { User } from 'database';
 import { ClearEntryModel } from '../types/ClearEntryModel';
 
 type PrismaUser = Prisma.UserGetPayload<{}>;
