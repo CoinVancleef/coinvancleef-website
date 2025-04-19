@@ -129,7 +129,7 @@ export default function ProfilePage() {
                   </div>
                 ) : null
               ) : (
-                <div className="p-6 mb-6">
+                <div className="p-6">
                   <h2 className="text-xl font-bold mb-4 text-gray-100 border-b border-gray-700 pb-2">
                     Social Links
                   </h2>

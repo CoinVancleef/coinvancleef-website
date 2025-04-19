@@ -185,12 +185,12 @@ export const PROFILE_ICON_NAMES: Record<ProfileIcon, string> = {
   [ProfileIcon.TH17]: 'Wily Beast and Weakest Creature',
   [ProfileIcon.TH175]: 'Sunken Fossil World',
   [ProfileIcon.TH18]: 'Unconnected Marketeers',
-  [ProfileIcon.TH185]: 'Hundred Ghostly Scheme Stories',
-  [ProfileIcon.TH19]: 'Phantasmal Destroyer',
+  [ProfileIcon.TH185]: '100th Black Market',
+  [ProfileIcon.TH19]: 'Unfinished Dream of All Living Ghost',
 
   // Fan games
   [ProfileIcon.ALCOSTG]: 'Uwabami Breakers',
-  [ProfileIcon.DYNAMARISA]: 'Dynamite Marisa',
+  [ProfileIcon.DYNAMARISA]: 'Marisa',
   [ProfileIcon.MEGAMARI]: 'MegaMari',
   [ProfileIcon.PATCHCON]: 'Patchcon',
 

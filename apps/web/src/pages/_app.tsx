@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { ApolloProvider } from '@apollo/client';
 import { AuthProvider } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import apolloClient from '../lib/apollo-client';
 import '../styles/globals.css';
 
@@ -24,6 +25,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <AuthProvider>
           {showNavbar && <Navbar />}
           <Component {...pageProps} />
+          {showNavbar && <Footer />}
         </AuthProvider>
       </ApolloProvider>
     </>

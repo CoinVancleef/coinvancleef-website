@@ -1,16 +1,6 @@
 import { TouhouGame, AchievementType } from './enums';
 
 /**
- * Base interface for shot types across all games
- */
-export interface ShotType {
-  id: string; // Unique identifier
-  name: string; // Display name
-  game: TouhouGame; // Which game this shot type belongs to
-  basePoints: number; // Base points for this shot type
-}
-
-/**
  * Interface for the data row in our points database
  */
 export interface DanmakuPointsData {

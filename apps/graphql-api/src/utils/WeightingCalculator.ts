@@ -20,7 +20,7 @@ export class WeightingCalculator {
   /**
    * Calculate the total weighted danmaku points from an array of individual clear danmaku points.
    *
-   * Formula (similar to osu! pp formula):
+   * Formula:
    * total_danmaku_points = dp[1] * 0.95^0 + dp[2] * 0.95^1 + dp[3] * 0.95^2 + ... + dp[m] * 0.95^(m-1)
    *
    * Where:

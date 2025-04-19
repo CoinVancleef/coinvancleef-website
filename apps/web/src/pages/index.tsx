@@ -9,40 +9,61 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>CoinVancleef | Home</title>
+        <title>CoinVancleef | Touhou Leaderboard</title>
+        <meta name="description" content="Touhou achievement tracking and leaderboard" />
       </Head>
-      <main className="min-h-screen bg-gray-50 py-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg p-8">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to CoinVancleef</h1>
-              <p className="text-lg text-gray-600 mb-8">
-                Your trusted platform for financial insights
-              </p>
+      <main className="min-h-screen bg-gray-900 py-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gray-800 shadow overflow-hidden rounded-lg p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <p className="text-lg text-gray-300">Track your Touhou achievements</p>
+            </div>
 
-              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+            {/* Navigation Links */}
+            <div className="space-y-6 text-gray-300">
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-2">Leaderboard</h2>
+                <Link
+                  href="/leaderboard"
+                  className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
+                >
+                  View Leaderboard →
+                </Link>
+              </div>
+
+              <div className="border-t border-gray-700 pt-6">
+                <h2 className="text-xl font-semibold text-white mb-2">
+                  {isAuthenticated ? 'Your Profile' : 'Join the Community'}
+                </h2>
+                <p className="mb-3">
+                  {isAuthenticated
+                    ? 'View your progress and achievements'
+                    : 'Create an account to track your Touhou achievements'}
+                </p>
+
                 {isAuthenticated ? (
                   <Link
                     href="/profile"
-                    className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
                   >
-                    View Profile
+                    Go to Profile →
                   </Link>
                 ) : (
-                  <>
+                  <div className="space-x-6">
                     <Link
                       href="/login"
-                      className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                      className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
                     >
                       Login
                     </Link>
                     <Link
                       href="/register"
-                      className="px-6 py-3 border border-blue-600 text-blue-600 font-medium rounded-md hover:bg-blue-50 transition-colors"
+                      className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
                     >
                       Sign up
                     </Link>
-                  </>
+                  </div>
                 )}
               </div>
             </div>

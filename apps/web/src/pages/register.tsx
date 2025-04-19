@@ -15,7 +15,6 @@ const REGISTER_MUTATION = gql`
         email
         name
         role
-        profilePicture
       }
       token
       errors {
@@ -57,7 +56,6 @@ export default function RegisterPage() {
             name,
             email,
             password,
-            profilePicture: 'th06', // Set default profile picture
           },
         },
       });

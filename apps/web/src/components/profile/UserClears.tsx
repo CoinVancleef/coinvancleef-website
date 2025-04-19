@@ -77,7 +77,7 @@ interface UserClearsProps {
 const UserClears: React.FC<UserClearsProps> = ({
   profileUuid,
   isViewOnly = false,
-  limit = 10,
+  limit = 20,
   onLoadMore,
   renderAs = 'list',
 }) => {
@@ -209,12 +209,12 @@ const UserClears: React.FC<UserClearsProps> = ({
       />
 
       {hasMoreEntries && onLoadMore && (
-        <div className="flex justify-center mt-6">
+        <div className="flex justify-center mt-6 mb-2">
           <button
             onClick={onLoadMore}
             className="px-4 py-2 border border-gray-600 rounded-md text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-all duration-200"
           >
-            Show More ({Math.min(10, totalEntries - limit)} more of {totalEntries})
+            Show More
           </button>
         </div>
       )}

@@ -239,8 +239,9 @@ export class ClearEntryResolver {
     // L1CC count includes direct L1CC achievements plus all LNB/LNB+ and LNN achievements
     const l1cc = l1ccEntries.length + lnbEntries.length + lnn;
 
-    // Calculate total danmaku points
-    const danmaku_points = clearEntries.reduce((sum, entry) => sum + entry.danmaku_points, 0);
+    // Calculate total danmaku points using the weighting calculator
+    const danmakuPointsArray = clearEntries.map(entry => Number(entry.danmaku_points));
+    const danmaku_points = WeightingCalculator.calculateTotalPoints(danmakuPointsArray);
 
     // Update user record
     await prisma.user.update({
