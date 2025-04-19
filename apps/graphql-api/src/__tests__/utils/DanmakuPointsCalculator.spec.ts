@@ -17,8 +17,8 @@ jest.mock('../../../../web/src/touhou-types/danmakuPointsData', () => ({
 }));
 
 describe('DanmakuPointsCalculator', () => {
-  describe('determineAchievementType', () => {
-    it('should return LNN for no deaths and no bombs', () => {
+  describe('achievement type detection through calculate method', () => {
+    it('should return LNN points for no deaths and no bombs', () => {
       const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
@@ -26,12 +26,11 @@ describe('DanmakuPointsCalculator', () => {
         isNoBombs: true,
       };
 
-      // Access private method using type assertion
-      const achievementType = (DanmakuPointsCalculator as any)['determineAchievementType'](input);
-      expect(achievementType).toBe(DanmakuPointsType.LNN);
+      const points = DanmakuPointsCalculator.calculate(input);
+      expect(points).toBe(360); // LNN points for TH06 ReimuA
     });
 
-    it('should return LNB_PLUS for no bombs and no 3rd condition', () => {
+    it('should return LNB+ points for no bombs and no 3rd condition', () => {
       const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
@@ -39,105 +38,85 @@ describe('DanmakuPointsCalculator', () => {
         isNo3rdCondition: true,
       };
 
-      const achievementType = (DanmakuPointsCalculator as any)['determineAchievementType'](input);
-      expect(achievementType).toBe(DanmakuPointsType.LNB_PLUS);
+      const points = DanmakuPointsCalculator.calculate(input);
+      expect(points).toBe(30); // LNB+ points for TH06 ReimuA
     });
 
-    it('should return LNB for no bombs only', () => {
+    it('should return LNB points for no bombs only', () => {
       const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
         isNoBombs: true,
       };
 
-      const achievementType = (DanmakuPointsCalculator as any)['determineAchievementType'](input);
-      expect(achievementType).toBe(DanmakuPointsType.LNB);
+      const points = DanmakuPointsCalculator.calculate(input);
+      expect(points).toBe(30); // LNB points for TH06 ReimuA
     });
 
-    it('should return L1CC as default when no special conditions are met', () => {
+    it('should return L1CC points as default when no special conditions are met', () => {
       const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
       };
 
-      const achievementType = (DanmakuPointsCalculator as any)['determineAchievementType'](input);
-      expect(achievementType).toBe(DanmakuPointsType.L1CC);
+      const points = DanmakuPointsCalculator.calculate(input);
+      expect(points).toBe(21); // L1CC points for TH06 ReimuA
     });
   });
 
-  describe('calculateLowMissPoints', () => {
+  describe('calculateLowMissPoints through calculate method', () => {
     it('should correctly calculate points for 1 miss', () => {
-      const pointsData = {
+      const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
-        lnn: 360,
-        lnbPlus: 30,
-        lnb: 30,
-        l1cc: 21,
+        isNoBombs: true,
+        numberOfDeaths: 1,
       };
-      const calculatedPoints = (DanmakuPointsCalculator as any)['calculateLowMissPoints'](
-        pointsData,
-        1,
-      );
 
+      const points = DanmakuPointsCalculator.calculate(input);
       // Expected: 360 * 0.5 = 180
-      expect(calculatedPoints).toBe(180);
+      expect(points).toBe(180);
     });
 
     it('should correctly calculate points for 2 misses', () => {
-      const pointsData = {
+      const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
-        lnn: 360,
-        lnbPlus: 30,
-        lnb: 30,
-        l1cc: 21,
+        isNoBombs: true,
+        numberOfDeaths: 2,
       };
-      const calculatedPoints = (DanmakuPointsCalculator as any)['calculateLowMissPoints'](
-        pointsData,
-        2,
-      );
 
+      const points = DanmakuPointsCalculator.calculate(input);
       // Expected: 360 * 0.5 * 0.6 = 108
-      expect(calculatedPoints).toBe(108);
+      expect(points).toBe(108);
     });
 
     it('should correctly calculate points for 3 misses', () => {
-      const pointsData = {
+      const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
-        lnn: 360,
-        lnbPlus: 30,
-        lnb: 30,
-        l1cc: 21,
+        isNoBombs: true,
+        numberOfDeaths: 3,
       };
-      const calculatedPoints = (DanmakuPointsCalculator as any)['calculateLowMissPoints'](
-        pointsData,
-        3,
-      );
 
+      const points = DanmakuPointsCalculator.calculate(input);
       // Expected: 360 * 0.5 * 0.6 * 0.7 = 75.6, rounded to 76
-      expect(calculatedPoints).toBe(76);
+      expect(points).toBe(76);
     });
 
     it('should return 120% of LNB+ when calculated points are lower than the threshold', () => {
-      const pointsData = {
+      const input: CalculationInput = {
         game: TouhouGame.TH07,
         shotType: 'SakuyaB',
-        lnn: 80,
-        lnbPlus: 29,
-        lnb: 26,
-        l1cc: 18,
+        isNoBombs: true,
+        numberOfDeaths: 3,
       };
-      const calculatedPoints = (DanmakuPointsCalculator as any)['calculateLowMissPoints'](
-        pointsData,
-        3,
-      );
 
+      const points = DanmakuPointsCalculator.calculate(input);
       // Expected calculation: 80 * 0.5 * 0.6 * 0.7 = 16.8
       // Threshold: 29 * 1.2 = 34.8
       // Since 16.8 < 34.8, should return 29 * 1.2 = 34.8, rounded to 35
-      expect(calculatedPoints).toBe(35);
+      expect(points).toBe(35);
     });
   });
 
@@ -191,6 +170,7 @@ describe('DanmakuPointsCalculator', () => {
       const input: CalculationInput = {
         game: TouhouGame.TH06,
         shotType: 'ReimuA',
+        isNoBombs: true,
         numberOfDeaths: 2,
       };
 

@@ -1,0 +1,71 @@
+name: GraphQL API CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/graphql-api/**'
+      - 'apps/web/src/touhou-types/**'
+      - '.github/workflows/graphql-api.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/graphql-api/**'
+      - 'apps/web/src/touhou-types/**'
+      - '.github/workflows/graphql-api.yml'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8.6.0'
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Create touhou-types directory for build
+      - name: Prepare types directory
+        run: mkdir -p apps/graphql-api/node_modules/@touhou-types
+
+      # Compile types from web package
+      - name: Compile types from web
+        working-directory: apps/web
+        run: npx tsc -p tsconfig.types.json
+
+      - name: Build GraphQL API
+        working-directory: apps/graphql-api
+        run: npx tsc
+
+      - name: Run tests
+        working-directory: apps/graphql-api
+        run: npx jest
+        env:
+          NODE_ENV: test
