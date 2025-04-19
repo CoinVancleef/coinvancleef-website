@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && pnpm turbo build --filter=graphql-api...",
+  "outputDirectory": "dist",
+  "framework": null,
+  "functions": {
+    "dist/index.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "release": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm turbo build",
+  "ignoreCommand": "pnpm turbo-ignore",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "outputDirectory": null
+}

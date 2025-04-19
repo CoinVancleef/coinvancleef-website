@@ -39,10 +39,24 @@ export default function RegisterPage() {
 
   const [register, { loading }] = useMutation(REGISTER_MUTATION);
 
+  // Validate name - only allow English letters, numbers, spaces, and basic punctuation
+  const validateName = (name: string) => {
+    const nameRegex = /^[a-zA-Z0-9 \-'_.]+$/;
+    return nameRegex.test(name);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setFieldErrors({});
+
+    // Validate name
+    if (name && !validateName(name)) {
+      setFieldErrors({
+        name: 'Name can only contain English letters, numbers, and basic punctuation',
+      });
+      return;
+    }
 
     if (password !== confirmPassword) {
       setFieldErrors({ confirmPassword: 'Passwords do not match' });
@@ -105,6 +119,19 @@ export default function RegisterPage() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  // Handle name input with validation
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+
+    // Clear error if field is now valid
+    if (validateName(value) && fieldErrors.name) {
+      const newErrors = { ...fieldErrors };
+      delete newErrors.name;
+      setFieldErrors(newErrors);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -132,7 +159,7 @@ export default function RegisterPage() {
                 name="name"
                 type="text"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={handleNameChange}
                 className={`w-full px-3 py-2 bg-gray-700 border ${
                   fieldErrors.name ? 'border-red-500' : 'border-gray-600'
                 } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-white`}

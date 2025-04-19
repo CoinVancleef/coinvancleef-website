@@ -69,6 +69,12 @@ export default function AccountSettingsPage() {
   const [accountSuccessMessage, setAccountSuccessMessage] = useState('');
   const [passwordSuccessMessage, setPasswordSuccessMessage] = useState('');
 
+  // Validate name - only allow English letters, numbers, spaces, and basic punctuation
+  const validateName = (name: string) => {
+    const nameRegex = /^[a-zA-Z0-9 \-'_.]+$/;
+    return nameRegex.test(name);
+  };
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -102,12 +108,33 @@ export default function AccountSettingsPage() {
   // Change password mutation
   const [changePassword, { loading: changingPassword }] = useMutation(CHANGE_PASSWORD);
 
+  // Handle name input with validation
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+
+    // Clear error if field is now valid
+    if (validateName(value) && accountFieldErrors.name) {
+      const newErrors = { ...accountFieldErrors };
+      delete newErrors.name;
+      setAccountFieldErrors(newErrors);
+    }
+  };
+
   // Handle account form submission
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAccountErrorMessage('');
     setAccountFieldErrors({});
     setAccountSuccessMessage('');
+
+    // Validate name
+    if (name && !validateName(name)) {
+      setAccountFieldErrors({
+        name: 'Name can only contain English letters, numbers, and basic punctuation',
+      });
+      return;
+    }
 
     try {
       const { data } = await updateAccount({
@@ -267,7 +294,7 @@ export default function AccountSettingsPage() {
                         name="name"
                         type="text"
                         value={name}
-                        onChange={e => setName(e.target.value)}
+                        onChange={handleNameChange}
                         className={`bg-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full py-2 px-3 sm:text-sm border-gray-600 rounded-md text-white ${
                           accountFieldErrors.name ? 'border-red-500' : ''
                         }`}

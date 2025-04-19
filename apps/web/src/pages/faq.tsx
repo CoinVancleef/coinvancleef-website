@@ -64,14 +64,68 @@ const FaqPage = () => {
       ),
     },
     {
+      id: 'replay-uploads',
+      question: 'Where do I upload my replays to link them in the submission form?',
+      answer: (
+        <>
+          <p>
+            You can upload your replays to several services and then provide the link in our
+            submission form:
+          </p>
+          <ul className="list-disc ml-6 mt-2 space-y-1">
+            <li>
+              <a
+                href="https://www.silentselene.net/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-400 hover:text-indigo-300"
+              >
+                Silent Selene
+              </a>{' '}
+            </li>
+            <li>
+              <a
+                href="https://replay.lunarcast.net/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-400 hover:text-indigo-300"
+              >
+                Lunarcast Replay Database
+              </a>{' '}
+            </li>
+            <li>
+              <a
+                href="https://drive.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-400 hover:text-indigo-300"
+              >
+                Google Drive
+              </a>{' '}
+            </li>
+            <li>
+              <a
+                href="https://mega.nz/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-400 hover:text-indigo-300"
+              >
+                MEGA
+              </a>{' '}
+            </li>
+          </ul>
+        </>
+      ),
+    },
+    {
       id: 'skill-accuracy',
       question: 'Do Danmaku Points accurately represent my skill?',
       answer: (
         <>
           <p>
-            While Danmaku Points provide a useful metric, they cannot perfectly represent your skill
-            for several reasons: any point-based system will naturally have subjective elements and
-            the system focuses on survival achievements, and scoring is completely unaccounted for.
+            While Danmaku Points provide a useful metric, they cannot perfectly represent your
+            skill. Any point-based system will naturally have subjective elements and the system
+            focuses on survival achievements, and scoring is completely unaccounted for.
             <br />
             Danmaku Points should be viewed as one useful measurement of achievement rather than a
             definitive skill representation.
@@ -164,7 +218,7 @@ const FaqPage = () => {
         <title>FAQ - Coinvancleef</title>
         <meta
           name="description"
-          content="Frequently Asked Questions about Coinvancleef and Danmaku Points"
+          content="Frequently Asked Questions about CoinVancleef and Danmaku Points"
         />
       </Head>
 

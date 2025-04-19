@@ -20,5 +20,13 @@
     "db:migrate": {
       "cache": false
     }
-  }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "RESEND_API_KEY",
+    "RESEND_FROM_EMAIL",
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "JWT_SECRET"
+  ]
 }
