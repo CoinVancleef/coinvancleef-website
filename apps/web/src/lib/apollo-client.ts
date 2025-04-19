@@ -1,6 +1,7 @@
 import { ApolloClient, InMemoryCache, createHttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
+import { RetryLink } from '@apollo/client/link/retry';
 
 // Create a function that gets called for every request
 const authLink = setContext((_, { headers }) => {
@@ -24,6 +25,29 @@ const authLink = setContext((_, { headers }) => {
 // Create an http link
 const httpLink = createHttpLink({
   uri: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/graphql',
+});
+
+// Add retry logic to handle transient network errors
+const retryLink = new RetryLink({
+  delay: {
+    initial: 300, // Start with 300ms delay
+    max: 3000, // Max 3 seconds between retries
+    jitter: true, // Add randomness to avoid thundering herd
+  },
+  attempts: {
+    max: 3, // Retry up to 3 times
+    retryIf: (error, operation) => {
+      // Retry on network errors and 5xx server errors
+      const isNetworkError = !error.result && error.message === 'Failed to fetch';
+      const isServerError = error.statusCode >= 500;
+
+      if (isNetworkError || isServerError) {
+        console.log(`Retrying operation ${operation.operationName} due to error:`, error);
+        return true;
+      }
+      return false;
+    },
+  },
 });
 
 // Keep track of whether we've already triggered a logout
@@ -71,17 +95,25 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   }
 
   if (networkError) {
-    console.error(`[Network error]: ${networkError}`);
+    console.warn(`[Network error]: ${networkError}`);
   }
 });
 
 // Create the Apollo Client instance
 const client = new ApolloClient({
-  link: from([errorLink, authLink, httpLink]),
+  link: from([errorLink, retryLink, authLink, httpLink]),
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {
       fetchPolicy: 'cache-and-network',
+      errorPolicy: 'all', // Don't treat graphql errors as fatal
+    },
+    query: {
+      fetchPolicy: 'network-only', // Don't use cache after modifications
+      errorPolicy: 'all',
+    },
+    mutate: {
+      errorPolicy: 'all',
     },
   },
 });

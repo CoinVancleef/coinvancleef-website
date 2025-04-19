@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { gql, useMutation } from '@apollo/client';
@@ -16,21 +16,86 @@ const REQUEST_PASSWORD_RESET = gql`
   }
 `;
 
+// Cooldown time in seconds
+const COOLDOWN_TIME = 60;
+
+// Store last request time in localStorage to persist across page refreshes
+const getLastRequestTime = () => {
+  if (typeof window === 'undefined') return 0;
+  const stored = localStorage.getItem('lastPasswordResetRequest');
+  return stored ? parseInt(stored, 10) : 0;
+};
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
+  // Rate limiting state
+  const [isInCooldown, setIsInCooldown] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [lastRequestTime, setLastRequestTime] = useState(getLastRequestTime);
+
   const [requestReset, { loading }] = useMutation(REQUEST_PASSWORD_RESET);
+
+  // Check for existing cooldown on component mount
+  useEffect(() => {
+    const storedTime = getLastRequestTime();
+    if (storedTime) {
+      const elapsedTime = Math.floor((Date.now() - storedTime) / 1000);
+      const remaining = Math.max(0, COOLDOWN_TIME - elapsedTime);
+
+      if (remaining > 0) {
+        setIsInCooldown(true);
+        setLastRequestTime(storedTime);
+        setCooldownRemaining(remaining);
+      }
+    }
+  }, []);
+
+  // Handle cooldown timer
+  useEffect(() => {
+    if (!isInCooldown) return;
+
+    const intervalId = setInterval(() => {
+      const elapsedTime = Math.floor((Date.now() - lastRequestTime) / 1000);
+      const remaining = Math.max(0, COOLDOWN_TIME - elapsedTime);
+
+      setCooldownRemaining(remaining);
+
+      if (remaining === 0) {
+        setIsInCooldown(false);
+        clearInterval(intervalId);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isInCooldown, lastRequestTime]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check for cooldown period
+    if (isInCooldown) {
+      setErrorMessage(`Please wait ${cooldownRemaining} seconds before requesting another email.`);
+      return;
+    }
+
     setErrorMessage('');
     setSuccessMessage('');
     setFieldErrors({});
 
     try {
+      // Start cooldown immediately (even before API call completes)
+      const currentTime = Date.now();
+      setIsInCooldown(true);
+      setLastRequestTime(currentTime);
+      setCooldownRemaining(COOLDOWN_TIME);
+
+      // Store in localStorage to persist across page refreshes
+      localStorage.setItem('lastPasswordResetRequest', currentTime.toString());
+
       const { data } = await requestReset({
         variables: { email },
       });
@@ -101,6 +166,13 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
+          {isInCooldown && cooldownRemaining > 0 && !errorMessage && (
+            <div className="bg-blue-900/50 border-l-4 border-blue-500 text-white px-4 py-3 rounded mb-6">
+              <p className="font-bold">Rate Limited</p>
+              <p>Please wait {cooldownRemaining} seconds before requesting another email.</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
@@ -129,10 +201,14 @@ export default function ForgotPasswordPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isInCooldown}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading
+                  ? 'Sending...'
+                  : isInCooldown
+                  ? `Try again in ${cooldownRemaining}s`
+                  : 'Send Reset Link'}
               </button>
             </div>
           </form>

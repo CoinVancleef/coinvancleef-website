@@ -1,5 +1,5 @@
 import React from 'react';
-import { TwitterIcon, YouTubeIcon, GitHubIcon, DiscordIcon } from './icons/SocialIcons';
+import { TwitterIcon, YouTubeIcon, GitHubIcon } from './icons/SocialIcons';
 
 const Footer: React.FC = () => {
   return (

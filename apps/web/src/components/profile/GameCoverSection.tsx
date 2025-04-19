@@ -6,6 +6,7 @@ import ClearEntryModal from './ClearEntryModal';
 import { useUserClears, GET_USER_CLEAR_ENTRIES_BY_UUID } from './UserClears';
 import { useQuery } from '@apollo/client';
 import LoadingSpinner from '../LoadingSpinner';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface GameCoverSectionProps {
   profileUuid?: string;
@@ -13,6 +14,7 @@ interface GameCoverSectionProps {
 }
 
 const GameCoverSection: React.FC<GameCoverSectionProps> = ({ profileUuid, isViewOnly = false }) => {
+  const { isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState<TouhouGame | null>(null);
   const [entryToEdit, setEntryToEdit] = useState<ClearEntry | undefined>(undefined);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,8 +39,11 @@ const GameCoverSection: React.FC<GameCoverSectionProps> = ({ profileUuid, isView
     setSelectedGame(game === selectedGame ? null : game);
   };
 
+  // Only allow edits if authenticated AND not in view-only mode
+  const canEdit = isAuthenticated && !isViewOnly;
+
   const handleEditClick = (entry: ClearEntry) => {
-    if (isViewOnly) return;
+    if (!canEdit) return;
     setEntryToEdit(entry);
     setIsEditModalOpen(true);
   };
@@ -83,8 +88,8 @@ const GameCoverSection: React.FC<GameCoverSectionProps> = ({ profileUuid, isView
                   <ClearsTable
                     clearEntries={filteredEntries}
                     showIndex={true}
-                    isOwnProfile={!isViewOnly}
-                    onEdit={isViewOnly ? undefined : handleEditClick}
+                    isOwnProfile={canEdit}
+                    onEdit={canEdit ? handleEditClick : undefined}
                   />
                 </div>
               ) : (
@@ -95,7 +100,7 @@ const GameCoverSection: React.FC<GameCoverSectionProps> = ({ profileUuid, isView
         </div>
       )}
 
-      {isEditModalOpen && !isViewOnly && (
+      {isEditModalOpen && canEdit && (
         <ClearEntryModal
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}

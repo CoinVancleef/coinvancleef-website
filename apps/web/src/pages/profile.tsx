@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { gql, useQuery } from '@apollo/client';
 import { useAuth } from '../contexts/AuthContext';
-import LoadingSpinner from '../components/LoadingSpinner';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import SocialLinks from '../components/profile/SocialLinks';
 import RecentClears from '../components/profile/RecentClears';
@@ -42,12 +41,16 @@ export default function ProfilePage() {
 
   // Determine if viewing own profile or someone else's
   useEffect(() => {
-    if (uuid && user) {
+    // Only set as own profile if authenticated AND looking at own UUID
+    if (!isAuthenticated) {
+      setIsOwnProfile(false);
+    } else if (uuid && user) {
       setIsOwnProfile(uuid === user.public_uuid);
     } else {
-      setIsOwnProfile(true);
+      // If no UUID provided and user is authenticated, it's the user's own profile
+      setIsOwnProfile(!uuid && isAuthenticated);
     }
-  }, [uuid, user]);
+  }, [uuid, user, isAuthenticated]);
 
   // Redirect if not authenticated and trying to view own profile
   useEffect(() => {
@@ -121,7 +124,7 @@ export default function ProfilePage() {
               !userData.twitterHandle &&
               !userData.twitchChannel &&
               !userData.youtubeChannel ? (
-                isOwnProfile ? (
+                isOwnProfile && isAuthenticated ? (
                   <div className="text-center p-6">
                     <Link href="/profile/edit" className="text-indigo-400 hover:text-indigo-300">
                       Add your social links

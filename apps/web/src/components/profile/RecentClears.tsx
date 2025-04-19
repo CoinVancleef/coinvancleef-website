@@ -3,6 +3,7 @@ import ClearsTable, { ClearEntry } from './ClearsTable';
 import LoadingSpinner from '../LoadingSpinner';
 import { useUserClears, UserClearsContext, GET_USER_CLEAR_ENTRIES_BY_UUID } from './UserClears';
 import { useQuery } from '@apollo/client';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface RecentClearsProps {
   profileUuid?: string;
@@ -10,6 +11,8 @@ interface RecentClearsProps {
 }
 
 const RecentClears: React.FC<RecentClearsProps> = ({ profileUuid, isViewOnly = false }) => {
+  const { isAuthenticated } = useAuth();
+
   // Use the context if available, otherwise make a query
   const context = useUserClears();
   const hasContextData = context.clearEntries && context.clearEntries.length > 0;
@@ -34,6 +37,9 @@ const RecentClears: React.FC<RecentClearsProps> = ({ profileUuid, isViewOnly = f
   const isLoading = !hasContextData && loading;
   const isError = !hasContextData && error;
 
+  // Always use view-only mode for non-authenticated users
+  const isEditableProfile = !isViewOnly && isAuthenticated;
+
   return (
     <div className="bg-gray-800 rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-xl font-bold mb-4 text-gray-100 border-b border-gray-700 pb-2">
@@ -50,7 +56,11 @@ const RecentClears: React.FC<RecentClearsProps> = ({ profileUuid, isViewOnly = f
         </div>
       ) : recentEntries.length > 0 ? (
         <div className="overflow-x-auto">
-          <ClearsTable clearEntries={recentEntries} showIndex={false} isOwnProfile={!isViewOnly} />
+          <ClearsTable
+            clearEntries={recentEntries}
+            showIndex={false}
+            isOwnProfile={isEditableProfile}
+          />
         </div>
       ) : (
         <p className="text-gray-400">No clears submitted yet.</p>
