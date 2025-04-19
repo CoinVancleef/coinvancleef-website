@@ -82,8 +82,8 @@ type GQLUserModel {
 }
 
 input LoginInput {
-  email: String!
   password: String!
+  usernameOrEmail: String!
 }
 
 type Mutation {
@@ -149,8 +149,8 @@ input UpdateProfileInput {
 input UserInput {
   country: String
   discord: String
-  email: String!
-  name: String
+  email: String
+  name: String!
   password: String!
   twitchChannel: String
   twitterHandle: String

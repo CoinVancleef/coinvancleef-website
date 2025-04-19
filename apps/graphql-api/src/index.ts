@@ -39,6 +39,7 @@ import cors from 'cors';
 import { prisma } from 'database';
 import { getUserFromToken } from './utils/auth';
 import { initializeEmailService } from './services/emailService';
+import { getJwtSecret } from './utils/security';
 
 // Check for crucial environment variables
 if (!process.env.DATABASE_URL) {
@@ -58,6 +59,16 @@ if (!process.env.RESEND_API_KEY) {
 }
 
 async function bootstrap() {
+  // Ensure we have a JWT secret
+  try {
+    // Get or generate a secure JWT secret and set it to process.env
+    process.env.JWT_SECRET = await getJwtSecret();
+    console.log('JWT secret configured successfully');
+  } catch (error) {
+    console.warn('⚠️ Warning: Failed to configure secure JWT secret:', error);
+    console.warn('   This might pose a security risk in production environments.');
+  }
+
   // Create Express application
   const app = express();
 
@@ -121,4 +132,8 @@ async function bootstrap() {
   });
 }
 
-bootstrap().catch(console.error);
+// Start the application
+bootstrap().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});

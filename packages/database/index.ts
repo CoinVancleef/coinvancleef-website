@@ -68,8 +68,8 @@ export enum AchievementType {
 export type User = {
   id: string;
   public_uuid: string;
-  email: string;
-  name?: string | null;
+  email?: string;
+  name: string | null;
   password: string;
   role: Role;
   danmaku_points: number;

@@ -84,7 +84,14 @@ export default function AccountSettingsPage() {
       if (data?.user) {
         // Initialize form with current user data
         setName(data.user.name || '');
-        setEmail(data.user.email || '');
+
+        // Only set email if it's not a placeholder
+        const userEmail = data.user.email || '';
+        if (!userEmail.includes('@placeholder.com')) {
+          setEmail(userEmail);
+        } else {
+          setEmail(''); // Clear email field for placeholder emails
+        }
       }
     },
   });

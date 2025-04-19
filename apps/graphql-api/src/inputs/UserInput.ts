@@ -8,12 +8,12 @@ import type { User } from 'database';
  */
 @InputType()
 export class UserInput {
-  @Field()
-  @IsEmail()
-  email!: string;
-
   @Field({ nullable: true })
-  name?: string;
+  @IsEmail()
+  email?: string;
+
+  @Field()
+  name!: string;
 
   @Field()
   @Length(6, 255)

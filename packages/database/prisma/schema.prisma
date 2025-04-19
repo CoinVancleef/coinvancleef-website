@@ -12,8 +12,8 @@ datasource db {
 model User {
   id             BigInt       @id @default(autoincrement())
   public_uuid    String       @unique @default(uuid())
-  email          String       @unique
-  name           String?
+  email          String?      @unique
+  name           String       @unique
   password       String
   role           Role         @default(USER)
   danmaku_points Int          @default(0)

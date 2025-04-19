@@ -7,11 +7,13 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf .turbo node_modules dist",
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate",
+    "sync-env": "node sync-env.js",
+    "db:migrate": "npm run sync-env && prisma migrate dev",
+    "db:push": "npm run sync-env && prisma db push",
+    "db:generate": "npm run sync-env && prisma generate",
     "dev": "tsc --watch --preserveWatchOutput",
     "lint": "eslint .",
-    "setup": "prisma generate"
+    "setup": "npm run sync-env && prisma generate"
   },
   "devDependencies": {
     "eslint": "^8.40.0",

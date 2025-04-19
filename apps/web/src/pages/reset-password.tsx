@@ -60,8 +60,21 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setFieldErrors({ password: 'Password must be at least 6 characters long' });
+    // Client-side password validation - matches server-side rules
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (password.length < 8) {
+      setFieldErrors({ password: 'Password must be at least 8 characters long' });
+      return;
+    }
+
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      setFieldErrors({
+        password:
+          'Password must include at least one uppercase letter, one lowercase letter, and one number',
+      });
       return;
     }
 
@@ -191,7 +204,10 @@ export default function ResetPasswordPage() {
                     {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-400">Password must be at least 6 characters</p>
+                <div className="mt-1 text-sm text-gray-400">
+                  Password must be at least 8 characters and include uppercase letters, lowercase
+                  letters, and numbers.
+                </div>
                 {fieldErrors.password && (
                   <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
                 )}

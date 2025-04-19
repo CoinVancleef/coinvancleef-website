@@ -1,12 +1,11 @@
 import { Resolver, Query, Mutation, Arg, Ctx, UseMiddleware } from 'type-graphql';
-import { User, prisma, Role } from 'database';
+import { prisma, Role } from 'database';
 import { UserInput, UpdateProfileInput } from '../inputs/UserInput';
 import { LoginInput } from '../inputs/LoginInput';
 import { UserResponse } from '../types/UserResponse';
 import { UserModel } from '../types/UserModel';
 import { PasswordChangeResponse } from '../types/PasswordChangeResponse';
 import { PasswordResetResponse } from '../types/PasswordResetResponse';
-import { RequestPasswordResetInput, ResetPasswordInput } from '../inputs/PasswordResetInput';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { isAuth } from '../middleware/isAuth';
@@ -17,6 +16,12 @@ import {
   verifyPasswordResetToken,
   deletePasswordResetToken,
 } from '../services/emailService';
+import { validatePasswordStrength, isPasswordCompromised } from '../utils/security';
+import {
+  mapPrismaUserToUserModel,
+  mapPrismaUsersToUserModels,
+  mapUsersForLeaderboard,
+} from '../utils/mappers';
 
 @Resolver()
 export class UserResolver {
@@ -33,33 +38,73 @@ export class UserResolver {
   }
 
   @Query(() => [UserModel])
-  async users(): Promise<User[]> {
-    return prisma.user.findMany();
+  async users(): Promise<UserModel[]> {
+    const users = await prisma.user.findMany();
+    return mapPrismaUsersToUserModels(users);
   }
 
   @Query(() => UserModel, { nullable: true })
-  async user(@Arg('publicUuid') publicUuid: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { public_uuid: publicUuid } });
+  async user(@Arg('publicUuid') publicUuid: string): Promise<UserModel | null> {
+    const user = await prisma.user.findUnique({ where: { public_uuid: publicUuid } });
+    return mapPrismaUserToUserModel(user);
   }
 
   @Mutation(() => UserResponse)
   async register(@Arg('data') data: UserInput): Promise<UserResponse> {
     try {
-      const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
-
-      if (existingUser) {
+      // Check if name already exists
+      const existingUserWithName = await prisma.user.findUnique({ where: { name: data.name } });
+      if (existingUserWithName) {
         return {
-          errors: [{ field: 'email', message: 'Email already in use' }],
+          errors: [{ field: 'name', message: 'Username already taken' }],
         };
       }
 
+      // Check if email already exists (if provided)
+      if (data.email) {
+        const existingUserWithEmail = await prisma.user.findUnique({
+          where: { email: data.email },
+        });
+        if (existingUserWithEmail) {
+          return {
+            errors: [{ field: 'email', message: 'Email already in use' }],
+          };
+        }
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(data.password);
+      if (!passwordValidation.isValid) {
+        return {
+          errors: [
+            { field: 'password', message: passwordValidation.message || 'Password is too weak' },
+          ],
+        };
+      }
+
+      // Check if password has been compromised
+      const isCompromised = await isPasswordCompromised(data.password);
+      if (isCompromised) {
+        return {
+          errors: [
+            {
+              field: 'password',
+              message:
+                'This password has appeared in data breaches. Please choose a different password for security.',
+            },
+          ],
+        };
+      }
+
+      // Hash password
       const hashedPassword = await bcrypt.hash(data.password, 12);
 
+      // Create new user
       const user = await prisma.user.create({
         data: {
-          email: data.email,
-          name: data.name,
+          email: data.email || `user_${Date.now()}@placeholder.com`, // Use placeholder email if not provided
           password: hashedPassword,
+          name: data.name,
           role: Role.USER,
           danmaku_points: 0,
           twitterHandle: data.twitterHandle || null,
@@ -70,33 +115,20 @@ export class UserResolver {
         },
       });
 
-      // Create token using public_uuid instead of id
+      // Generate token
       const token = jwt.sign({ userId: user.public_uuid }, process.env.JWT_SECRET || 'secret', {
         expiresIn: '1d',
       });
 
-      return { user, token };
+      return { user: mapPrismaUserToUserModel(user)!, token };
     } catch (error: any) {
       console.error('Registration error:', error);
-
-      // Return more specific error messages based on error type
-      if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-        return {
-          errors: [{ field: 'email', message: 'This email is already in use' }],
-        };
-      }
 
       if (error.message.includes('database')) {
         return {
           errors: [
             { field: 'database', message: 'Database connection error. Please try again later.' },
           ],
-        };
-      }
-
-      if (error.message.includes('validation')) {
-        return {
-          errors: [{ field: 'validation', message: error.message }],
         };
       }
 
@@ -111,11 +143,19 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(@Arg('data') data: LoginInput): Promise<UserResponse> {
     try {
-      const user = await prisma.user.findUnique({ where: { email: data.email } });
+      // Try to find user by email or username
+      const isEmail = data.usernameOrEmail.includes('@');
+
+      let user;
+      if (isEmail) {
+        user = await prisma.user.findUnique({ where: { email: data.usernameOrEmail } });
+      } else {
+        user = await prisma.user.findUnique({ where: { name: data.usernameOrEmail } });
+      }
 
       if (!user) {
         return {
-          errors: [{ field: 'email', message: 'User not found' }],
+          errors: [{ field: 'usernameOrEmail', message: 'User not found' }],
         };
       }
 
@@ -132,7 +172,7 @@ export class UserResolver {
         expiresIn: '1d',
       });
 
-      return { user, token };
+      return { user: mapPrismaUserToUserModel(user)!, token };
     } catch (error: any) {
       console.error('Login error:', error);
 
@@ -183,7 +223,7 @@ export class UserResolver {
         },
       });
 
-      return { user };
+      return { user: mapPrismaUserToUserModel(user)! };
     } catch (error: any) {
       console.error('Update profile error:', error);
 
@@ -285,29 +325,13 @@ export class UserResolver {
   // Get all users for leaderboard (no sensitive data)
   @Query(() => [UserModel])
   async leaderboard(): Promise<UserModel[]> {
-    return prisma.user.findMany({
+    // Fetch complete user objects
+    const users = await prisma.user.findMany({
       orderBy: {
         danmaku_points: 'desc',
       },
-      select: {
-        public_uuid: true,
-        name: true,
-        role: true,
-        danmaku_points: true,
-        totalClears: true,
-        lnn: true,
-        lnb: true,
-        l1cc: true,
-        globalRank: true,
-        twitterHandle: true,
-        youtubeChannel: true,
-        twitchChannel: true,
-        discord: true,
-        country: true,
-        profilePicture: true,
-        createdAt: true,
-      },
     });
+    return mapUsersForLeaderboard(users);
   }
 
   @Mutation(() => PasswordResetResponse)
@@ -427,12 +451,32 @@ export class UserResolver {
         };
       }
 
-      // Validate password
-      if (newPassword.length < 6) {
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.isValid) {
         return {
           success: false,
-          message: 'Password must be at least 6 characters long.',
-          errors: [{ field: 'password', message: 'Password must be at least 6 characters long.' }],
+          message: passwordValidation.message || 'Password is too weak',
+          errors: [
+            { field: 'password', message: passwordValidation.message || 'Password is too weak' },
+          ],
+        };
+      }
+
+      // Check if password has been compromised
+      const isCompromised = await isPasswordCompromised(newPassword);
+      if (isCompromised) {
+        return {
+          success: false,
+          message:
+            'This password has appeared in data breaches. Please choose a different password.',
+          errors: [
+            {
+              field: 'password',
+              message:
+                'This password has appeared in data breaches. Please choose a different password.',
+            },
+          ],
         };
       }
 

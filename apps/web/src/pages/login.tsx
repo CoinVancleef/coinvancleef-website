@@ -29,7 +29,7 @@ const LOGIN_MUTATION = gql`
 export default function LoginPage() {
   const router = useRouter();
   const { login: authLogin } = useAuth();
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
@@ -46,7 +46,7 @@ export default function LoginPage() {
       const { data } = await login({
         variables: {
           data: {
-            email,
+            usernameOrEmail,
             password,
           },
         },
@@ -58,7 +58,7 @@ export default function LoginPage() {
         let generalError = '';
 
         data.login.errors.forEach((err: any) => {
-          if (['email', 'password'].includes(err.field)) {
+          if (['usernameOrEmail', 'password'].includes(err.field)) {
             newFieldErrors[err.field] = err.message;
           } else {
             generalError += (generalError ? ', ' : '') + err.message;
@@ -112,22 +112,25 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-                Email Address
+              <label
+                htmlFor="usernameOrEmail"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
+                Username or Email
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="usernameOrEmail"
+                name="usernameOrEmail"
+                type="text"
                 required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                value={usernameOrEmail}
+                onChange={e => setUsernameOrEmail(e.target.value)}
                 className={`w-full px-3 py-2 bg-gray-700 border ${
-                  fieldErrors.email ? 'border-red-500' : 'border-gray-600'
+                  fieldErrors.usernameOrEmail ? 'border-red-500' : 'border-gray-600'
                 } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-white`}
               />
-              {fieldErrors.email && (
-                <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
+              {fieldErrors.usernameOrEmail && (
+                <p className="mt-1 text-sm text-red-400">{fieldErrors.usernameOrEmail}</p>
               )}
             </div>
 
