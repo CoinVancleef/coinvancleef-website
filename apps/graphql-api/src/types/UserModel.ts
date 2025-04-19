@@ -9,11 +9,11 @@ export class UserModel implements Omit<User, 'password' | 'clearEntries' | 'id'>
   @Field(() => String)
   public_uuid!: string;
 
-  @Field(() => String)
-  email!: string;
-
   @Field(() => String, { nullable: true })
-  name?: string | null;
+  email?: string | null;
+
+  @Field(() => String)
+  name!: string;
 
   // Don't expose the password
 

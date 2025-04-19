@@ -1,27 +1,24 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es2020",
     "module": "commonjs",
-    "lib": ["es2018", "esnext.asynciterable"],
+    "lib": ["es2020", "esnext.asynciterable"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": "./",
     "strict": false,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "noImplicitReturns": true,
     "paths": {
-      "*": ["node_modules/*", "../../node_modules/*"],
-      "@touhou-types/*": ["../web/src/touhou-types/*"]
+      "*": ["node_modules/*", "../../node_modules/*"]
     },
     "typeRoots": ["../../node_modules/@types", "node_modules/@types"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "../web" }]
+  "include": ["src/**/*", "../web/src/touhou-types/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

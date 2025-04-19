@@ -1,4 +1,4 @@
-import { TouhouGame } from '@touhou-types/enums';
+import { TouhouGame } from '../../../../web/src/touhou-types/enums';
 import {
   DanmakuPointsCalculator,
   CalculationInput,
@@ -6,7 +6,7 @@ import {
 } from '../../utils/DanmakuPointsCalculator';
 
 // Mock the database to avoid dependencies in tests
-jest.mock('@touhou-types/danmakuPointsData', () => ({
+jest.mock('../../../../web/src/touhou-types/danmakuPointsData', () => ({
   DANMAKU_POINTS_DATABASE: [
     // TH06 - Embodiment of Scarlet Devil
     { game: 'th06', shotType: 'ReimuA', lnn: 360, lnbPlus: 30, lnb: 30, l1cc: 21 },

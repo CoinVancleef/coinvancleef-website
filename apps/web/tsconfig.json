@@ -18,6 +18,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
+    "emitDeclarationOnly": true,
     "noEmit": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

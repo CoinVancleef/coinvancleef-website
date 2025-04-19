@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { prisma, User } from 'database';
+import { prisma, User, Role } from 'database';
+import { toBigInt } from './prismaHelpers';
 
 /**
  * Get user from JWT token
@@ -27,9 +28,18 @@ export const getUserFromToken = async (authorization: string): Promise<User | nu
     }
 
     // Find user by public UUID
-    const user = await prisma.user.findUnique({
+    const prismaUser = await prisma.user.findUnique({
       where: { public_uuid: payload.userId },
     });
+
+    if (!prismaUser) return null;
+
+    // Convert to match our User type
+    const user: User = {
+      ...prismaUser,
+      // Ensure enums match our expected types
+      role: prismaUser.role as unknown as Role,
+    };
 
     return user;
   } catch (err) {

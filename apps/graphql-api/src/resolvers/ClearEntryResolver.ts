@@ -13,32 +13,55 @@ import { Context } from '../types/Context';
 import { DanmakuPointsCalculator } from '../utils/DanmakuPointsCalculator';
 import { WeightingCalculator } from '../utils/WeightingCalculator';
 import { TouhouGame } from '../../../web/src/touhou-types/enums';
+import {
+  mapPrismaClearEntryToClearEntryModel,
+  mapPrismaClearEntriesToClearEntryModels,
+  idToString,
+  stringToBigInt,
+} from '../utils/mappers';
+import { toBigInt, idFilter, userIdFilter } from '../utils/prismaHelpers';
 
 @Resolver()
 export class ClearEntryResolver {
   // Get all clear entries
   @Query(() => ClearEntriesResponse)
   async clearEntries(): Promise<ClearEntriesResponse> {
-    const clearEntries = await prisma.clearEntry.findMany({
-      include: {
-        createdBy: true,
-      },
-    });
-    return {
-      clearEntries,
-      totalCount: clearEntries.length,
-    };
+    try {
+      const entries = await prisma.clearEntry.findMany({
+        include: {
+          createdBy: true,
+        },
+        orderBy: {
+          danmaku_points: 'desc',
+        },
+      });
+
+      const mappedEntries = mapPrismaClearEntriesToClearEntryModels(entries);
+
+      return {
+        clearEntries: mappedEntries,
+        totalCount: mappedEntries.length,
+      };
+    } catch (error: any) {
+      console.error('Error fetching clear entries:', error);
+      return {
+        clearEntries: [],
+        totalCount: 0,
+      };
+    }
   }
 
   // Get a specific clear entry by ID
   @Query(() => ClearEntryModel, { nullable: true })
-  async clearEntry(@Arg('publicUuid') publicUuid: string): Promise<ClearEntry | null> {
-    return prisma.clearEntry.findUnique({
+  async clearEntry(@Arg('publicUuid') publicUuid: string): Promise<ClearEntryModel | null> {
+    const entry = await prisma.clearEntry.findUnique({
       where: { public_uuid: publicUuid },
       include: {
         createdBy: true,
       },
     });
+
+    return mapPrismaClearEntryToClearEntryModel(entry);
   }
 
   // Get all clear entries for a specific user
@@ -47,46 +70,57 @@ export class ClearEntryResolver {
     @Arg('userPublicUuid') userPublicUuid: string,
     @Ctx() ctx: Context,
   ): Promise<ClearEntriesResponse> {
-    let userId;
+    try {
+      let userId;
 
-    // Handle the "me" special case
-    if (userPublicUuid === 'me') {
-      if (!ctx.user) {
-        return {
-          clearEntries: [],
-          totalCount: 0,
-        };
+      // Handle the "me" special case
+      if (userPublicUuid === 'me') {
+        if (!ctx.user) {
+          return {
+            clearEntries: [],
+            totalCount: 0,
+          };
+        }
+        userId = ctx.user.id;
+      } else {
+        // First get the user to obtain the internal userId
+        const user = await prisma.user.findUnique({
+          where: { public_uuid: userPublicUuid },
+        });
+
+        if (!user) {
+          return {
+            clearEntries: [],
+            totalCount: 0,
+          };
+        }
+
+        userId = user.id;
       }
-      userId = BigInt(ctx.user.id);
-    } else {
-      // First get the user to obtain the internal userId
-      const user = await prisma.user.findUnique({
-        where: { public_uuid: userPublicUuid },
+
+      const entries = await prisma.clearEntry.findMany({
+        where: userIdFilter(userId),
+        orderBy: {
+          danmaku_points: 'desc',
+        },
+        include: {
+          createdBy: true,
+        },
       });
 
-      if (!user) {
-        return {
-          clearEntries: [],
-          totalCount: 0,
-        };
-      }
+      const mappedEntries = mapPrismaClearEntriesToClearEntryModels(entries);
 
-      userId = BigInt(user.id);
+      return {
+        clearEntries: mappedEntries,
+        totalCount: mappedEntries.length,
+      };
+    } catch (error: any) {
+      console.error('Error fetching user clear entries:', error);
+      return {
+        clearEntries: [],
+        totalCount: 0,
+      };
     }
-
-    const clearEntries = await prisma.clearEntry.findMany({
-      where: { userId },
-      orderBy: {
-        danmaku_points: 'desc',
-      },
-      include: {
-        createdBy: true,
-      },
-    });
-    return {
-      clearEntries,
-      totalCount: clearEntries.length,
-    };
   }
 
   // Create a new clear entry
@@ -113,7 +147,7 @@ export class ClearEntryResolver {
       // Check if the user already has a clear entry for this game, difficulty, and shot type
       const existingEntry = await prisma.clearEntry.findFirst({
         where: {
-          userId: BigInt(userId),
+          ...userIdFilter(userId),
           game: data.game,
           difficulty: data.difficulty || 'Lunatic',
           shotType: data.shotType,
@@ -148,9 +182,9 @@ export class ClearEntryResolver {
       const achievementType = this.determineAchievementType(data);
 
       // Create the clear entry
-      const clearEntry = await prisma.clearEntry.create({
+      const createdEntry = await prisma.clearEntry.create({
         data: {
-          userId: BigInt(userId),
+          userId: toBigInt(userId),
           shotType: data.shotType,
           game: data.game,
           difficulty: data.difficulty || 'Lunatic',
@@ -170,8 +204,22 @@ export class ClearEntryResolver {
         },
       });
 
+      // Map to GraphQL model
+      const clearEntry = mapPrismaClearEntryToClearEntryModel(createdEntry);
+
+      if (!clearEntry) {
+        return {
+          errors: [
+            {
+              field: 'server',
+              message: 'Failed to map clear entry data after creation',
+            },
+          ],
+        };
+      }
+
       // Update user statistics
-      await this.updateUserStatistics(userId);
+      await this.updateUserStatistics(idToString(userId));
 
       // Update global rankings
       await this.updateGlobalRankings();
@@ -208,10 +256,10 @@ export class ClearEntryResolver {
   /**
    * Helper method to update user statistics after a clear is added
    */
-  private async updateUserStatistics(userId: string): Promise<void> {
+  private async updateUserStatistics(userId: string | number | bigint): Promise<void> {
     // Get all clear entries for the user
     const clearEntries = await prisma.clearEntry.findMany({
-      where: { userId: BigInt(userId) },
+      where: userIdFilter(userId),
     });
 
     // Calculate statistics
@@ -245,7 +293,7 @@ export class ClearEntryResolver {
 
     // Update user record
     await prisma.user.update({
-      where: { id: BigInt(userId) },
+      where: idFilter(userId),
       data: {
         totalClears,
         lnn,
@@ -268,7 +316,7 @@ export class ClearEntryResolver {
     // Update each user's global rank
     for (let i = 0; i < users.length; i++) {
       await prisma.user.update({
-        where: { id: users[i].id },
+        where: idFilter(users[i].id),
         data: { globalRank: i + 1 }, // Ranks start at 1
       });
     }
@@ -299,11 +347,9 @@ export class ClearEntryResolver {
         };
       }
 
-      // Log IDs for debugging
-
-      // Fix the ID comparison by converting both to strings and trimming any 'n' suffix
-      const entryUserId = existingEntry.userId.toString().replace('n', '');
-      const contextUserId = ctx.user.id.toString().replace('n', '');
+      // Fix the ID comparison by converting both to strings
+      const entryUserId = idToString(existingEntry.userId);
+      const contextUserId = idToString(ctx.user.id);
 
       // Check if user is the owner or an admin
       if (entryUserId !== contextUserId && ctx.user.role !== 'ADMIN') {
@@ -350,7 +396,7 @@ export class ClearEntryResolver {
         updateData.danmaku_points = points;
       }
 
-      const clearEntry = await prisma.clearEntry.update({
+      const updatedEntry = await prisma.clearEntry.update({
         where: { public_uuid: data.public_uuid },
         data: updateData,
         include: {
@@ -358,8 +404,22 @@ export class ClearEntryResolver {
         },
       });
 
+      // Map to GraphQL model
+      const clearEntry = mapPrismaClearEntryToClearEntryModel(updatedEntry);
+
+      if (!clearEntry) {
+        return {
+          errors: [
+            {
+              field: 'server',
+              message: 'Failed to map clear entry data after update',
+            },
+          ],
+        };
+      }
+
       // Update user statistics after update
-      await this.updateUserStatistics(ctx.user.id);
+      await this.updateUserStatistics(idToString(ctx.user.id));
 
       // Update global rankings
       await this.updateGlobalRankings();
@@ -396,7 +456,7 @@ export class ClearEntryResolver {
         updateData.danmaku_points = data.danmaku_points;
       }
 
-      const clearEntry = await prisma.clearEntry.update({
+      const updatedEntry = await prisma.clearEntry.update({
         where: { public_uuid: data.public_uuid },
         data: updateData,
         include: {
@@ -404,14 +464,28 @@ export class ClearEntryResolver {
         },
       });
 
+      // Map to GraphQL model
+      const clearEntry = mapPrismaClearEntryToClearEntryModel(updatedEntry);
+
+      if (!clearEntry) {
+        return {
+          errors: [
+            {
+              field: 'server',
+              message: 'Failed to map clear entry data after verification',
+            },
+          ],
+        };
+      }
+
       // If we're verifying the entry, recalculate the user's total danmaku points
       if (data.verified) {
-        const userId = existingEntry.userId.toString();
+        const userId = idToString(existingEntry.userId);
 
         // Get all verified clear entries for this user
         const userClearEntries = await prisma.clearEntry.findMany({
           where: {
-            userId: BigInt(userId),
+            ...userIdFilter(existingEntry.userId),
             verified: true,
           },
           select: { danmaku_points: true },
@@ -425,7 +499,7 @@ export class ClearEntryResolver {
 
         // Update user's total points
         await prisma.user.update({
-          where: { id: userId },
+          where: idFilter(userId),
           data: { danmaku_points: totalPoints },
         });
       }
@@ -459,8 +533,8 @@ export class ClearEntryResolver {
       }
 
       // Fix the ID comparison by converting both to strings and trimming any 'n' suffix
-      const entryUserId = existingEntry.userId.toString().replace('n', '');
-      const contextUserId = ctx.user.id.toString().replace('n', '');
+      const entryUserId = idToString(existingEntry.userId);
+      const contextUserId = idToString(ctx.user.id);
 
       // Check if user is the owner or an admin
       if (entryUserId !== contextUserId && ctx.user.role !== 'ADMIN') {
@@ -479,6 +553,7 @@ export class ClearEntryResolver {
 
       return true;
     } catch (error) {
+      console.error('Error deleting clear entry:', error);
       return false;
     }
   }

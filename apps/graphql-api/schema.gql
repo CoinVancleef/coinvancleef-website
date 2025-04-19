@@ -65,12 +65,12 @@ type GQLUserModel {
   createdAt: DateTime!
   danmaku_points: Int!
   discord: String
-  email: String!
+  email: String
   globalRank: Int
   l1cc: Int!
   lnb: Int!
   lnn: Int!
-  name: String
+  name: String!
   profilePicture: String
   public_uuid: String!
   role: String!
