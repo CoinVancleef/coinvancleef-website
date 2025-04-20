@@ -6,6 +6,7 @@
     "node": ">=16.0.0"
   },
   "scripts": {
+    "preinstall": "node -e \"try { require('fs').writeFileSync('.npmrc', require('fs').readFileSync('.npmrc', 'utf8') + '\\nregistry=https://registry.npmjs.org/\\nnetwork-concurrency=1\\nfetch-retries=10\\nuse-node-fetch=true\\n'); } catch(e) { console.error(e); }\"",
     "build": "turbo run build",
     "build:stg": "turbo run build:stg",
     "build:prod": "turbo run build:prod",
