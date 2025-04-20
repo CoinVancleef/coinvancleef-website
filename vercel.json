@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "NODE_ENV=development npm run build",
+  "buildCommand": "cd apps/web && npm run build",
   "ignoreCommand": "npm run turbo-ignore",
-  "installCommand": "NODE_ENV=development npm install --no-optional --ignore-scripts --include=dev",
+  "installCommand": "cd apps/web && npm install --no-optional --ignore-scripts",
   "framework": null,
   "outputDirectory": null
 }
