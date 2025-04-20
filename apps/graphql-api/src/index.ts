@@ -72,8 +72,13 @@ async function bootstrap() {
   // Create Express application
   const app = express();
 
-  // Enable CORS
-  app.use(cors());
+  // Enable CORS with configuration
+  const corsOptions = {
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true,
+  };
+  console.log('CORS configured with origin:', process.env.CORS_ORIGIN || '*');
+  app.use(cors(corsOptions));
 
   // Initialize email service
   const emailServiceInitialized = initializeEmailService();
@@ -119,7 +124,10 @@ async function bootstrap() {
   await server.start();
 
   // Apply middleware
-  server.applyMiddleware({ app });
+  server.applyMiddleware({
+    app,
+    cors: false, // Disable Apollo's CORS as we've configured it with Express
+  });
 
   // Start the server
   const PORT = process.env.PORT || 4000;
