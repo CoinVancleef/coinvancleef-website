@@ -21,7 +21,8 @@
     "start:prod": "turbo run start:prod",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "turbo-ignore": "npx turbo-ignore"
   },
   "devDependencies": {
     "@types/node": "^18.16.3",
