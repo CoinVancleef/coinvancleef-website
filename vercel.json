@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
+  "buildCommand": "NODE_ENV=development npm run build",
   "ignoreCommand": "npm run turbo-ignore",
-  "installCommand": "NODE_ENV=development corepack enable && corepack prepare pnpm@8.6.2 --activate && pnpm install || npm install --include=dev",
+  "installCommand": "NODE_ENV=development corepack enable && corepack prepare pnpm@8.6.2 --activate && pnpm install --include=dev || npm install --include=dev",
   "framework": null,
   "outputDirectory": null
 }
